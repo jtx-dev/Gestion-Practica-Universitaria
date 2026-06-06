@@ -1,0 +1,7 @@
+/* Normalización de estilos */
+h1, h2, h3, h4, h5, a, button{
+    font-family: "Fredoka";
+}
+p, span, input{
+    font-family: "Railway"
+}
