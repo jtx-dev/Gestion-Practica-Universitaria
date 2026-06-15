@@ -1,7 +1,70 @@
 /* Normalización de estilos */
-h1, h2, h3, h4, h5, a, button{
+h1,
+h2,
+h3,
+h4,
+h5,
+a,
+button {
     font-family: "Fredoka";
 }
-p, span, input{
+
+p,
+span,
+input {
     font-family: "Raleway";
+}
+
+:root {
+    --sidebar-width: 260px;
+    --primary-blue: #0d6efd;
+    --bg-gray: #f8f9fa;
+}
+
+body {
+    background-color: var(--bg-gray);
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    z-index: 1000;
+}
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 40px;
+}
+
+.nav-link {
+    color: #495057;
+    padding: 12px 20px;
+    margin: 4px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link:hover {
+    background-color: #f1f3f5;
+    color: var(--primary-blue);
+}
+
+.nav-link.active {
+    background-color: #e7f1ff;
+    color: var(--primary-blue);
+}
+
+.nav-link.text-danger:hover {
+    background-color: #fff5f5;
+}
+
+.card-custom {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
