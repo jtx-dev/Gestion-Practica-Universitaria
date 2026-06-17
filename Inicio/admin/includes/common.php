@@ -53,6 +53,10 @@ function admin_table_exists(mysqli $conexion, string $tableName): bool
 function admin_obtener_id_institucion_actual(mysqli $conexion): int
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
         return 0;
     }
 
@@ -62,9 +66,10 @@ function admin_obtener_id_institucion_actual(mysqli $conexion): int
 
     $idUsuarioSesion = (int) ($_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0);
     if ($idUsuarioSesion > 0) {
-        $stmt = mysqli_prepare($conexion, "SELECT u.id_institucion
+        $stmt = mysqli_prepare($conexion, "SELECT COALESCE(u.id_institucion, i.id_institucion, 0) AS id_institucion
             FROM usuario u
             INNER JOIN rol r ON r.id_rol = u.id_rol
+            LEFT JOIN institucion i ON i.id_administrador = u.id_usuario
             WHERE u.id_usuario = ? AND r.nombre_rol = 'Administrador'
             LIMIT 1");
         if ($stmt) {
@@ -82,9 +87,10 @@ function admin_obtener_id_institucion_actual(mysqli $conexion): int
 
     $correoSesion = trim((string) ($_SESSION['correo'] ?? $_SESSION['email'] ?? ''));
     if ($correoSesion !== '') {
-        $stmt = mysqli_prepare($conexion, "SELECT u.id_institucion
+        $stmt = mysqli_prepare($conexion, "SELECT COALESCE(u.id_institucion, i.id_institucion, 0) AS id_institucion
             FROM usuario u
             INNER JOIN rol r ON r.id_rol = u.id_rol
+            LEFT JOIN institucion i ON i.id_administrador = u.id_usuario
             WHERE u.correo = ? AND r.nombre_rol = 'Administrador'
             LIMIT 1");
         if ($stmt) {

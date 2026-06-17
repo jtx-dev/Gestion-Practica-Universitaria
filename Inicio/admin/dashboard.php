@@ -2,33 +2,75 @@
 include('../../conexion.php');
 include(__DIR__ . '/includes/common.php');
 
-$totalUsuarios = admin_query_scalar($conexion, "SELECT COUNT(*) FROM usuario");
-$usuariosActivos = admin_query_scalar($conexion, "SELECT COUNT(*) FROM usuario WHERE estado_cuenta = 'activa'");
-$usuariosInactivos = admin_query_scalar($conexion, "SELECT COUNT(*) FROM usuario WHERE estado_cuenta = 'inactiva'");
-$totalEmpresas = admin_query_scalar($conexion, "SELECT COUNT(*) FROM empresa");
-$totalEstudiantes = admin_query_scalar($conexion, "SELECT COUNT(*) FROM estudiante");
-$totalCoordinadores = admin_query_scalar($conexion, "SELECT COUNT(*) FROM coordinador");
-$totalDirectivos = admin_query_scalar($conexion, "SELECT COUNT(*) FROM directivo");
-$practicasActivas = admin_query_scalar($conexion, "SELECT COUNT(*) FROM oferta_practica WHERE estado_oferta IN ('activa', 'aprobada', 'publicada')");
-$ultimosUsuarios = admin_query_all($conexion, "SELECT u.id_usuario, u.correo, COALESCE(CONCAT(e.nombre, ' ', e.apellido), CONCAT(a.nombre, ' ', a.apellido), 'Usuario') AS nombre_completo, COALESCE(r.nombre_rol, 'Sin rol') AS rol, u.estado_cuenta, u.fecha_creacion
+$idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
+$filtroInstitucion = $idInstitucionActual > 0 ? (int) $idInstitucionActual : 0;
+$filtroUsuarios = $filtroInstitucion > 0
+    ? "u.id_institucion = {$filtroInstitucion} AND r.nombre_rol IN ('Estudiante', 'Coordinador', 'Directivo')"
+    : "1 = 0";
+
+$totalUsuarios = admin_query_scalar($conexion, "SELECT COUNT(*)
 FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}");
+$usuariosActivos = admin_query_scalar($conexion, "SELECT COUNT(*)
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}
+  AND u.estado_cuenta = 'activa'");
+$usuariosInactivos = admin_query_scalar($conexion, "SELECT COUNT(*)
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}
+  AND u.estado_cuenta = 'inactiva'");
+$totalEmpresas = admin_query_scalar($conexion, "SELECT COUNT(DISTINCT e.id_usuario)
+FROM empresa e
+INNER JOIN oferta_practica op ON op.id_empresa = e.id_usuario
+INNER JOIN carrera c ON c.id_carrera = op.id_carrera
+WHERE c.id_institucion = {$filtroInstitucion}");
+$totalEstudiantes = admin_query_scalar($conexion, "SELECT COUNT(*)
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}
+  AND r.nombre_rol = 'Estudiante'");
+$totalCoordinadores = admin_query_scalar($conexion, "SELECT COUNT(*)
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}
+  AND r.nombre_rol = 'Coordinador'");
+$totalDirectivos = admin_query_scalar($conexion, "SELECT COUNT(*)
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}
+  AND r.nombre_rol = 'Directivo'");
+$practicasActivas = admin_query_scalar($conexion, "SELECT COUNT(*)
+FROM oferta_practica op
+INNER JOIN carrera c ON c.id_carrera = op.id_carrera
+WHERE c.id_institucion = {$filtroInstitucion}
+  AND op.estado_oferta IN ('activa', 'aprobada', 'publicada')");
+$ultimosUsuarios = admin_query_all($conexion, "SELECT u.id_usuario, u.correo, COALESCE(CONCAT(e.nombre, ' ', e.apellido), CONCAT(c.nombre, ' ', c.apellido), CONCAT(d.nombre, ' ', d.apellido), 'Usuario') AS nombre_completo, COALESCE(r.nombre_rol, 'Sin rol') AS rol, u.estado_cuenta, u.fecha_creacion
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
 LEFT JOIN estudiante e ON e.id_usuario = u.id_usuario
 LEFT JOIN coordinador c ON c.id_usuario = u.id_usuario
 LEFT JOIN directivo d ON d.id_usuario = u.id_usuario
-LEFT JOIN administrador a ON a.id_usuario = u.id_usuario
-LEFT JOIN rol r ON r.id_rol = u.id_rol
+WHERE {$filtroUsuarios}
 ORDER BY u.id_usuario DESC
 LIMIT 5");
 
 admin_layout_header('Dashboard Administrativo', 'Resumen operativo del modulo de administracion.');
 ?>
+<?php if ($idInstitucionActual <= 0): ?>
+    <div class="alert alert-warning mb-4">
+        No se pudo identificar la institución del administrador. Los indicadores se muestran vacíos hasta que vuelvas a iniciar sesión.
+    </div>
+<?php endif; ?>
 <div class="row g-3 mb-4">
     <?php
     $kpis = [
         ['Total Usuarios', $totalUsuarios, 'bi-people', 'primary'],
         ['Usuarios Activos', $usuariosActivos, 'bi-check-circle', 'success'],
         ['Usuarios Inactivos', $usuariosInactivos, 'bi-slash-circle', 'secondary'],
-        ['Empresas', $totalEmpresas, 'bi-buildings', 'warning'],
+        ['Empresas Vinculadas', $totalEmpresas, 'bi-buildings', 'warning'],
         ['Estudiantes', $totalEstudiantes, 'bi-mortarboard', 'info'],
         ['Coordinadores', $totalCoordinadores, 'bi-diagram-3', 'danger'],
         ['Directivos', $totalDirectivos, 'bi-person-badge', 'dark'],

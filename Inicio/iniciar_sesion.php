@@ -49,8 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($correo === '' || $contrasena === '') {
         $mensaje = 'Ingresa correo y contraseña.';
     } else {
-        $sql = "SELECT u.id_usuario, u.id_rol, u.id_institucion, u.correo, u.contrasena_hash, u.estado_cuenta,
+        $sql = "SELECT u.id_usuario, u.id_rol, COALESCE(u.id_institucion, i.id_institucion, 0) AS id_institucion_resuelta,
+                       u.correo, u.contrasena_hash, u.estado_cuenta,
                        r.nombre_rol,
+                       COALESCE(i.nombre, '') AS nombre_institucion,
                        COALESCE(a.nombre, e.nombre, c.nombre, d.nombre, em.nombre_empresa, '') AS nombre_usuario,
                        COALESCE(a.apellido, e.apellido, c.apellido, d.apellido, '') AS apellido_usuario
                 FROM usuario u
@@ -60,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 LEFT JOIN coordinador c ON c.id_usuario = u.id_usuario
                 LEFT JOIN directivo d ON d.id_usuario = u.id_usuario
                 LEFT JOIN empresa em ON em.id_usuario = u.id_usuario
+                LEFT JOIN institucion i ON i.id_administrador = u.id_usuario
                 WHERE u.correo = ?
                 LIMIT 1";
 
@@ -80,7 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['correo'] = (string) $usuario['correo'];
                     $_SESSION['id_rol'] = (int) $usuario['id_rol'];
                     $_SESSION['nombre_rol'] = (string) $usuario['nombre_rol'];
-                    $_SESSION['id_institucion'] = (int) ($usuario['id_institucion'] ?? 0);
+                    $_SESSION['id_institucion'] = (int) ($usuario['id_institucion_resuelta'] ?? 0);
+                    $_SESSION['nombre_institucion'] = (string) ($usuario['nombre_institucion'] ?? '');
                     $_SESSION['nombre_usuario'] = trim((string) ($usuario['nombre_usuario'] ?? ''));
                     $_SESSION['apellido_usuario'] = trim((string) ($usuario['apellido_usuario'] ?? ''));
                     $_SESSION['nombre_completo'] = trim(
