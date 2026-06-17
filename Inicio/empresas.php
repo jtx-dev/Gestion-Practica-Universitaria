@@ -19,7 +19,7 @@ $tipoMensaje = 'success';
  */
 
 function validarRUT(string $rut): bool {
-    $rut = preg_replace('/[^0-9kK]/', '', $rut);
+    $rut = strtoupper(preg_replace('/[^0-9kK]/', '', $rut));
     if (strlen($rut) < 2) return false;
     
     $numero = substr($rut, 0, -1);
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = 'Error: No se permiten correos de dominios públicos (Gmail, Outlook, etc.). Por favor use un correo corporativo.';
         $tipoMensaje = 'danger';
     } elseif (!validarRUT($rut_empresa)) {
-        $mensaje = 'Error: El RUT ingresado no es válido (Fallo en dígito verificador).';
+        $mensaje = 'Error: El RUT ingresado no es válido. Revisa el dígito verificador.';
         $tipoMensaje = 'danger';
     } elseif ($numero_rut <= 50000000) {
         $mensaje = 'Error: El RUT ingresado no corresponde a una empresa (debe ser superior a 50.000.000).';
@@ -326,7 +326,7 @@ if ($resCarreras) {
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">RUT Empresa</label>
-                            <input type="text" name="rut_empresa" class="form-control shadow-sm" placeholder="12.345.678-9" value="<?= htmlspecialchars($rut_empresa ?? '') ?>" required>
+                            <input type="text" name="rut_empresa" class="form-control shadow-sm" placeholder="12.345.678-5" value="<?= htmlspecialchars($rut_empresa ?? '') ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Nombre del Encargado</label>

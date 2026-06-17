@@ -11,6 +11,60 @@ function limpiarTexto($valor)
     return trim((string) $valor);
 }
 
+function rut_normalizar(string $rut): string
+{
+    return strtoupper(preg_replace('/[^0-9kK]/', '', $rut));
+}
+
+function rut_formatear(string $rut): string
+{
+    $rut = rut_normalizar($rut);
+
+    if (strlen($rut) < 2) {
+        return $rut;
+    }
+
+    $dv = substr($rut, -1);
+    $numero = substr($rut, 0, -1);
+    $formateado = '';
+
+    while (strlen($numero) > 3) {
+        $formateado = '.' . substr($numero, -3) . $formateado;
+        $numero = substr($numero, 0, -3);
+    }
+
+    return $numero . $formateado . '-' . $dv;
+}
+
+function validarRUT(string $rut): bool
+{
+    $rut = rut_normalizar($rut);
+    if (strlen($rut) < 2) {
+        return false;
+    }
+
+    $numero = substr($rut, 0, -1);
+    $dvOriginal = strtoupper(substr($rut, -1));
+
+    $suma = 0;
+    $factor = 2;
+    for ($i = strlen($numero) - 1; $i >= 0; $i--) {
+        $suma += ((int) $numero[$i]) * $factor;
+        $factor = ($factor === 7) ? 2 : $factor + 1;
+    }
+
+    $dvCalculado = 11 - ($suma % 11);
+    if ($dvCalculado === 11) {
+        $dvCalculado = '0';
+    } elseif ($dvCalculado === 10) {
+        $dvCalculado = 'K';
+    } else {
+        $dvCalculado = (string) $dvCalculado;
+    }
+
+    return $dvOriginal === $dvCalculado;
+}
+
 $resultadoInstituciones = mysqli_query($conexion, "SELECT id_institucion, nombre FROM institucion ORDER BY nombre");
 if ($resultadoInstituciones) {
     while ($fila = mysqli_fetch_assoc($resultadoInstituciones)) {
@@ -28,9 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rut = limpiarTexto($_POST['rut'] ?? '');
         $correo = limpiarTexto($_POST['correo'] ?? '');
         $contrasena = (string) ($_POST['contrasena'] ?? '');
+        $rutNormalizado = rut_normalizar($rut);
 
         if ($nombre === '' || $apellido === '' || $rut === '' || $correo === '' || $contrasena === '') {
             $mensaje = 'Completa todos los datos del administrador.';
+            $tipoMensaje = 'danger';
+        } elseif (!validarRUT($rut)) {
+            $mensaje = 'El RUT ingresado no es válido. Revisa el dígito verificador.';
             $tipoMensaje = 'danger';
         } else {
             $sqlRolAdmin = "SELECT id_rol FROM rol WHERE nombre_rol = 'Administrador' LIMIT 1";
@@ -48,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($idInstitucion > 0) {
                         $stmtUsuario = mysqli_prepare($conexion, "INSERT INTO usuario (id_rol, id_institucion, rut, correo, contrasena_hash, estado_cuenta) VALUES (?, ?, ?, ?, ?, 'activa')");
-                        mysqli_stmt_bind_param($stmtUsuario, "iisss", $idRolAdmin, $idInstitucion, $rut, $correo, $hash);
+                        mysqli_stmt_bind_param($stmtUsuario, "iisss", $idRolAdmin, $idInstitucion, $rutNormalizado, $correo, $hash);
                     } else {
                         $stmtUsuario = mysqli_prepare($conexion, "INSERT INTO usuario (id_rol, id_institucion, rut, correo, contrasena_hash, estado_cuenta) VALUES (?, NULL, ?, ?, ?, 'activa')");
-                        mysqli_stmt_bind_param($stmtUsuario, "isss", $idRolAdmin, $rut, $correo, $hash);
+                        mysqli_stmt_bind_param($stmtUsuario, "isss", $idRolAdmin, $rutNormalizado, $correo, $hash);
                     }
                     if (!mysqli_stmt_execute($stmtUsuario)) {
                         throw new Exception(mysqli_stmt_error($stmtUsuario));
@@ -108,16 +166,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rut = limpiarTexto($_POST['rut'] ?? '');
         $correo = limpiarTexto($_POST['correo'] ?? '');
         $idInstitucion = (int) ($_POST['id_institucion'] ?? 0);
+        $rutNormalizado = rut_normalizar($rut);
+        $rutOriginalNormalizado = rut_normalizar((string) ($_POST['rut_original'] ?? ''));
+        $rutActualNormalizado = '';
+
+        if ($id > 0) {
+            $stmtRut = mysqli_prepare($conexion, "SELECT rut FROM usuario WHERE id_usuario = ? LIMIT 1");
+            if ($stmtRut) {
+                mysqli_stmt_bind_param($stmtRut, "i", $id);
+                mysqli_stmt_execute($stmtRut);
+                $resultadoRut = mysqli_stmt_get_result($stmtRut);
+                $filaRut = $resultadoRut ? mysqli_fetch_assoc($resultadoRut) : null;
+                $rutActualNormalizado = rut_normalizar((string) ($filaRut['rut'] ?? ''));
+                mysqli_stmt_close($stmtRut);
+            }
+        }
+        $rutReferenciaNormalizado = $rutOriginalNormalizado !== '' ? $rutOriginalNormalizado : $rutActualNormalizado;
 
         if ($id > 0 && $nombre !== '' && $apellido !== '' && $rut !== '' && $correo !== '') {
+            if ($rutReferenciaNormalizado === '' || $rutNormalizado !== $rutReferenciaNormalizado) {
+                if (!validarRUT($rut)) {
+                    $mensaje = 'El RUT ingresado no es válido. Revisa el dígito verificador.';
+                    $tipoMensaje = 'danger';
+                } else {
             mysqli_begin_transaction($conexion);
             try {
                 if ($idInstitucion > 0) {
                     $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET rut = ?, correo = ?, id_institucion = ? WHERE id_usuario = ?");
-                    mysqli_stmt_bind_param($stmtUsuario, "ssii", $rut, $correo, $idInstitucion, $id);
+                    mysqli_stmt_bind_param($stmtUsuario, "ssii", $rutNormalizado, $correo, $idInstitucion, $id);
                 } else {
                     $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET rut = ?, correo = ?, id_institucion = NULL WHERE id_usuario = ?");
-                    mysqli_stmt_bind_param($stmtUsuario, "ssi", $rut, $correo, $id);
+                    mysqli_stmt_bind_param($stmtUsuario, "ssi", $rutNormalizado, $correo, $id);
                 }
                 if (!mysqli_stmt_execute($stmtUsuario)) {
                     throw new Exception(mysqli_stmt_error($stmtUsuario));
@@ -151,6 +230,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_rollback($conexion);
                 $mensaje = 'No se pudo actualizar el administrador.';
                 $tipoMensaje = 'danger';
+            }
+                }
+            } else {
+                mysqli_begin_transaction($conexion);
+                try {
+                    if ($idInstitucion > 0) {
+                        $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET rut = ?, correo = ?, id_institucion = ? WHERE id_usuario = ?");
+                        mysqli_stmt_bind_param($stmtUsuario, "ssii", $rutNormalizado, $correo, $idInstitucion, $id);
+                    } else {
+                        $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET rut = ?, correo = ?, id_institucion = NULL WHERE id_usuario = ?");
+                        mysqli_stmt_bind_param($stmtUsuario, "ssi", $rutNormalizado, $correo, $id);
+                    }
+                    if (!mysqli_stmt_execute($stmtUsuario)) {
+                        throw new Exception(mysqli_stmt_error($stmtUsuario));
+                    }
+                    mysqli_stmt_close($stmtUsuario);
+
+                    $stmtAdmin = mysqli_prepare($conexion, "UPDATE administrador SET nombre = ?, apellido = ? WHERE id_usuario = ?");
+                    mysqli_stmt_bind_param($stmtAdmin, "ssi", $nombre, $apellido, $id);
+                    if (!mysqli_stmt_execute($stmtAdmin)) {
+                        throw new Exception(mysqli_stmt_error($stmtAdmin));
+                    }
+                    mysqli_stmt_close($stmtAdmin);
+
+                    $stmtLimpiar = mysqli_prepare($conexion, "UPDATE institucion SET id_administrador = NULL WHERE id_administrador = ?");
+                    mysqli_stmt_bind_param($stmtLimpiar, "i", $id);
+                    if (!mysqli_stmt_execute($stmtLimpiar)) {
+                        throw new Exception(mysqli_stmt_error($stmtLimpiar));
+                    }
+                    mysqli_stmt_close($stmtLimpiar);
+
+                    $stmtInstitucion = mysqli_prepare($conexion, "UPDATE institucion SET id_administrador = ? WHERE id_institucion = ?");
+                    mysqli_stmt_bind_param($stmtInstitucion, "ii", $id, $idInstitucion);
+                    if (!mysqli_stmt_execute($stmtInstitucion)) {
+                        throw new Exception(mysqli_stmt_error($stmtInstitucion));
+                    }
+                    mysqli_stmt_close($stmtInstitucion);
+
+                    mysqli_commit($conexion);
+                    $mensaje = 'Administrador actualizado correctamente.';
+                } catch (Throwable $e) {
+                    mysqli_rollback($conexion);
+                    $mensaje = 'No se pudo actualizar el administrador.';
+                    $tipoMensaje = 'danger';
+                }
             }
         } else {
             $mensaje = 'Completa todos los datos para actualizar.';
@@ -259,7 +383,7 @@ if ($consulta) {
                                         </span>
                                     </div>
                                     <div class="small text-muted">Correo: <?= htmlspecialchars($admin['correo']) ?></div>
-                                    <div class="small text-muted">RUT: <?= htmlspecialchars($admin['rut']) ?></div>
+                                    <div class="small text-muted">RUT: <?= htmlspecialchars(rut_formatear((string) $admin['rut'])) ?></div>
                                     <div class="small text-muted">Institución: <?= htmlspecialchars($admin['institucion'] ?? 'Sin asignar') ?></div>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 justify-content-md-end">
@@ -270,7 +394,7 @@ if ($consulta) {
                                         data-id="<?= (int) $admin['id_usuario'] ?>"
                                         data-nombre="<?= htmlspecialchars($admin['nombre_admin'], ENT_QUOTES) ?>"
                                         data-apellido="<?= htmlspecialchars($admin['apellido'], ENT_QUOTES) ?>"
-                                        data-rut="<?= htmlspecialchars($admin['rut'], ENT_QUOTES) ?>"
+                                        data-rut="<?= htmlspecialchars(rut_formatear((string) $admin['rut']), ENT_QUOTES) ?>"
                                         data-correo="<?= htmlspecialchars($admin['correo'], ENT_QUOTES) ?>"
                                         data-institucion="<?= (int) ($admin['id_institucion'] ?? 0) ?>"
                                     >
@@ -323,7 +447,7 @@ if ($consulta) {
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">RUT</label>
-                                <input type="text" name="rut" class="form-control" required>
+                                <input type="text" name="rut" class="form-control" placeholder="12.345.678-5" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Correo</label>
@@ -364,6 +488,7 @@ if ($consulta) {
                     <div class="modal-body">
                         <input type="hidden" name="accion" value="editar">
                         <input type="hidden" name="id_usuario" id="editar_id_usuario">
+                        <input type="hidden" name="rut_original" id="editar_rut_original">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nombre</label>
@@ -375,7 +500,7 @@ if ($consulta) {
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">RUT</label>
-                                <input type="text" name="rut" id="editar_rut" class="form-control" required>
+                                <input type="text" name="rut" id="editar_rut" class="form-control" placeholder="12.345.678-5" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Correo</label>
@@ -407,6 +532,7 @@ if ($consulta) {
         modalEditar.addEventListener('show.bs.modal', function (event) {
             const boton = event.relatedTarget;
             document.getElementById('editar_id_usuario').value = boton.getAttribute('data-id') || '';
+            document.getElementById('editar_rut_original').value = boton.getAttribute('data-rut') || '';
             document.getElementById('editar_nombre').value = boton.getAttribute('data-nombre') || '';
             document.getElementById('editar_apellido').value = boton.getAttribute('data-apellido') || '';
             document.getElementById('editar_rut').value = boton.getAttribute('data-rut') || '';
