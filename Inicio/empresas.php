@@ -1,11 +1,24 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 include('../conexion.php');
+mysqli_set_charset($conexion, "utf8mb4");
+
+/** @var mysqli $conexion */
+// esta linea evita ver errores del $conexion del intelephense.
 
 $mensaje = '';
 $tipoMensaje = 'success';
 
-// Función para validar el RUT chileno (Modulo 11)
-function validarRUT($rut) {
+/**
+ * Función para validar el RUT chileno (Modulo 11)
+ * 
+ * @param string $rut El RUT a validar.
+ * @return bool True si es válido, False si no.
+ */
+
+function validarRUT(string $rut): bool {
     $rut = preg_replace('/[^0-9kK]/', '', $rut);
     if (strlen($rut) < 2) return false;
     
@@ -28,15 +41,62 @@ function validarRUT($rut) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre_empresa = trim($_POST['nombre_empresa'] ?? '');
-    $rut_empresa = trim($_POST['rut_empresa'] ?? '');
-    $titulo = trim($_POST['titulo'] ?? '');
-    $descripcion = trim($_POST['descripcion'] ?? '');
-    $id_carrera = (int) ($_POST['id_carrera'] ?? 0);
-    $correo = trim($_POST['correo'] ?? '');
+    $ip_usuario = $_SERVER['REMOTE_ADDR'];
 
-    // 1. Validar dominio de correo (no público)
-    $dominios_publicos = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'msn.com'];
+    // 0. Control de Tasa (Rate Limiting) - RNF-SEC-01
+    $queryLimit = "SELECT COUNT(*) as total FROM intentos_envio WHERE ip_usuario = ? AND fecha_intento > (NOW() - INTERVAL 10 MINUTE)";
+    $EstadoLimite = mysqli_prepare($conexion, $queryLimit);
+    if ($EstadoLimite) {
+        mysqli_stmt_bind_param($EstadoLimite, "s", $ip_usuario);
+        mysqli_stmt_execute($EstadoLimite);
+        $resLimit = mysqli_stmt_get_result($EstadoLimite);
+        $dataLimit = mysqli_fetch_assoc($resLimit);
+        mysqli_stmt_close($EstadoLimite);
+    } else {
+        $dataLimit = ['total' => 0]; // Fallback si falla la query
+    }
+
+    if ($dataLimit['total'] >= 3) {
+        $mensaje = 'Por seguridad, ha superado el límite de intentos. Por favor, espere 10 minutos antes de volver a intentarlo.';
+        $tipoMensaje = 'warning';
+    } else {
+        $nombre_empresa = trim($_POST['nombre_empresa'] ?? '');
+        $rut_empresa = trim($_POST['rut_empresa'] ?? '');
+        $nombre_encargado = trim($_POST['nombre_encargado'] ?? '');
+        $telefono = trim($_POST['telefono'] ?? '');
+        $direccion = trim($_POST['direccion'] ?? '');
+        $titulo = trim($_POST['titulo'] ?? '');
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        $nombre_carrera_input = trim($_POST['nombre_carrera'] ?? '');
+        $correo = trim($_POST['correo'] ?? '');
+        $cupos = (int) ($_POST['cupos'] ?? 1);
+        $requisitos = trim($_POST['requisitos'] ?? '');
+        $duracion = (int) ($_POST['duracion'] ?? 3);
+
+        // Resolver ID de carrera por nombre
+        $id_carrera = 0;
+        if ($nombre_carrera_input !== '') {
+            $BusquedaCarrera = mysqli_prepare($conexion, "SELECT id_carrera FROM carrera WHERE nombre_carrera = ?");
+            if ($BusquedaCarrera) {
+                mysqli_stmt_bind_param($BusquedaCarrera, "s", $nombre_carrera_input);
+                mysqli_stmt_execute($BusquedaCarrera);
+                $resC = mysqli_stmt_get_result($BusquedaCarrera);
+                if ($rowC = mysqli_fetch_assoc($resC)) {
+                    $id_carrera = (int)$rowC['id_carrera'];
+                }
+                mysqli_stmt_close($BusquedaCarrera);
+            }
+
+            // Manejo de casos demo si no hay base de datos poblada
+            if ($id_carrera === 0) {
+                if (strpos($nombre_carrera_input, 'Informática') !== false) $id_carrera = 1;
+                elseif (strpos($nombre_carrera_input, 'Comercial') !== false) $id_carrera = 2;
+                elseif (strpos($nombre_carrera_input, 'Psicología') !== false) $id_carrera = 3;
+            }
+        }
+
+        // 1. Validar dominio de correo (no público)
+        $dominios_publicos = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'msn.com'];
     $dominio = strtolower(substr(strrchr($correo, "@"), 1));
 
     // Validar RUT Empresa (Chile: Personas Jurídicas > 50.000.000)
@@ -52,19 +112,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($numero_rut <= 50000000) {
         $mensaje = 'Error: El RUT ingresado no corresponde a una empresa (debe ser superior a 50.000.000).';
         $tipoMensaje = 'danger';
-    } elseif ($nombre_empresa === '' || $rut_empresa === '' || $titulo === '' || $descripcion === '' || $id_carrera === 0 || $correo === '') {
-        $mensaje = 'Error: Todos los campos son obligatorios.';
+    } elseif ($nombre_empresa === '' || $rut_empresa === '' || $titulo === '' || $descripcion === '' || $id_carrera === 0 || $correo === '' || $requisitos === '' || $nombre_encargado === '' || $telefono === '' || $direccion === '') {
+        $faltantes = [];
+        if ($nombre_empresa === '') $faltantes[] = 'Nombre Empresa';
+        if ($rut_empresa === '') $faltantes[] = 'RUT Empresa';
+        if ($nombre_encargado === '') $faltantes[] = 'Nombre Encargado';
+        if ($telefono === '') $faltantes[] = 'Teléfono';
+        if ($direccion === '') $faltantes[] = 'Dirección';
+        if ($titulo === '') $faltantes[] = 'Título';
+        if ($descripcion === '') $faltantes[] = 'Descripción';
+        if ($requisitos === '') $faltantes[] = 'Requisitos';
+        if ($correo === '') $faltantes[] = 'Correo';
+        if ($id_carrera === 0) $faltantes[] = 'Carrera (Debe seleccionar una válida de la lista)';
+        
+        $mensaje = 'Error: Faltan campos o son inválidos: ' . implode(', ', $faltantes);
         $tipoMensaje = 'danger';
     } else {
+        // Registrar el intento (Solo si pasó todas las validaciones de campos)
+        $EstadoIntento = mysqli_prepare($conexion, "INSERT INTO intentos_envio (ip_usuario) VALUES (?)");
+        if ($EstadoIntento) {
+            mysqli_stmt_bind_param($EstadoIntento, "s", $ip_usuario);
+            mysqli_stmt_execute($EstadoIntento);
+            mysqli_stmt_close($EstadoIntento);
+        }
+
         mysqli_begin_transaction($conexion);
         try {
             // Verificar si el usuario ya existe
-            $stmtCheck = mysqli_prepare($conexion, "SELECT id_usuario FROM usuario WHERE correo = ? OR rut = ?");
-            mysqli_stmt_bind_param($stmtCheck, "ss", $correo, $rut_empresa);
-            mysqli_stmt_execute($stmtCheck);
-            $resultCheck = mysqli_stmt_get_result($stmtCheck);
+            $ValidarUsuario = mysqli_prepare($conexion, "SELECT id_usuario FROM usuario WHERE correo = ? OR rut = ?");
+            if (!$ValidarUsuario) throw new Exception("Error al preparar validación de usuario.");
+            mysqli_stmt_bind_param($ValidarUsuario, "ss", $correo, $rut_empresa);
+            mysqli_stmt_execute($ValidarUsuario);
+            $resultCheck = mysqli_stmt_get_result($ValidarUsuario);
             $userRow = mysqli_fetch_assoc($resultCheck);
-            mysqli_stmt_close($stmtCheck);
+            mysqli_stmt_close($ValidarUsuario);
 
             if ($userRow) {
                 $idUsuario = $userRow['id_usuario'];
@@ -75,34 +156,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id_rol_empresa = $rol ? $rol['id_rol'] : 2; 
 
                 $hash = password_hash($rut_empresa, PASSWORD_DEFAULT);
-                $stmtUser = mysqli_prepare($conexion, "INSERT INTO usuario (id_rol, rut, correo, contrasena_hash, estado_cuenta) VALUES (?, ?, ?, ?, 'activa')");
-                mysqli_stmt_bind_param($stmtUser, "isss", $id_rol_empresa, $rut_empresa, $correo, $hash);
-                if (!mysqli_stmt_execute($stmtUser)) throw new Exception("Error al crear usuario.");
+                $RegistroUsuario = mysqli_prepare($conexion, "INSERT INTO usuario (id_rol, rut, correo, contrasena_hash, estado_cuenta) VALUES (?, ?, ?, ?, 'activa')");
+                if (!$RegistroUsuario) throw new Exception("Error al preparar creación de usuario.");
+                mysqli_stmt_bind_param($RegistroUsuario, "isss", $id_rol_empresa, $rut_empresa, $correo, $hash);
+                if (!mysqli_stmt_execute($RegistroUsuario)) throw new Exception("Error al crear usuario.");
                 $idUsuario = mysqli_insert_id($conexion);
-                mysqli_stmt_close($stmtUser);
+                mysqli_stmt_close($RegistroUsuario);
 
-                $stmtEmpresa = mysqli_prepare($conexion, "INSERT INTO empresa (id_usuario, razon_social, rut_empresa, nombre_empresa) VALUES (?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmtEmpresa, "isss", $idUsuario, $nombre_empresa, $rut_empresa, $nombre_empresa);
-                if (!mysqli_stmt_execute($stmtEmpresa)) throw new Exception("Error al crear registro de empresa.");
-                mysqli_stmt_close($stmtEmpresa);
+                $RegistroEmpresa = mysqli_prepare($conexion, "INSERT INTO empresa (id_usuario, razon_social, rut_empresa, direccion, telefono, nombre_encargado, nombre_empresa) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                if (!$RegistroEmpresa) throw new Exception("Error al preparar creación de empresa.");
+                mysqli_stmt_bind_param($RegistroEmpresa, "issssss", $idUsuario, $nombre_empresa, $rut_empresa, $direccion, $telefono, $nombre_encargado, $nombre_empresa);
+                if (!mysqli_stmt_execute($RegistroEmpresa)) throw new Exception("Error al crear registro de empresa.");
+                mysqli_stmt_close($RegistroEmpresa);
             }
 
             // Insertar oferta de práctica
-            $stmtOferta = mysqli_prepare($conexion, "INSERT INTO oferta_practica (id_carrera, id_empresa, titulo, descripcion, requisitos, cupos, duracion_meses, estado_oferta) VALUES (?, ?, ?, ?, ?, 1, 3, 'pendiente_aprobacion')");
-            $requisitos = "No especificados";
-            mysqli_stmt_bind_param($stmtOferta, "iisss", $id_carrera, $idUsuario, $titulo, $descripcion, $requisitos);
-            if (!mysqli_stmt_execute($stmtOferta)) throw new Exception("Error al enviar la oferta.");
-            mysqli_stmt_close($stmtOferta);
+            $RegistroOferta = mysqli_prepare($conexion, "INSERT INTO oferta_practica (id_carrera, id_empresa, titulo, descripcion, requisitos, cupos, duracion_meses, estado_oferta) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente_aprobacion')");
+            if (!$RegistroOferta) throw new Exception("Error al preparar envío de oferta (posible falta de columnas en la BD).");
+            mysqli_stmt_bind_param($RegistroOferta, "iisssii", $id_carrera, $idUsuario, $titulo, $descripcion, $requisitos, $cupos, $duracion);
+            if (!mysqli_stmt_execute($RegistroOferta)) throw new Exception("Error al enviar la oferta.");
+            mysqli_stmt_close($RegistroOferta);
 
             mysqli_commit($conexion);
             $mensaje = '¡Oferta enviada con éxito! Será revisada por la coordinación en un plazo de 48 hrs.';
             $tipoMensaje = 'success';
+
+            // Resetear variables para limpiar el formulario tras el éxito
+            $nombre_empresa = $rut_empresa = $nombre_encargado = $telefono = $direccion = $titulo = $descripcion = $correo = $requisitos = $nombre_carrera_input = '';
+            $id_carrera = 0;
+            $cupos = 1;
+            $duracion = 3;
         } catch (Exception $e) {
             mysqli_rollback($conexion);
             $mensaje = 'Error al procesar la solicitud: ' . $e->getMessage();
             $tipoMensaje = 'danger';
         }
     }
+} // Fin del else de Rate Limiting
 }
 
 // Obtener carreras para el select
@@ -238,6 +328,18 @@ if ($resCarreras) {
                             <label class="form-label">RUT Empresa</label>
                             <input type="text" name="rut_empresa" class="form-control shadow-sm" placeholder="12.345.678-9" value="<?= htmlspecialchars($rut_empresa ?? '') ?>" required>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre del Encargado</label>
+                            <input type="text" name="nombre_encargado" class="form-control shadow-sm" placeholder="Ej: Juan Pérez" value="<?= htmlspecialchars($nombre_encargado ?? '') ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono de Contacto</label>
+                            <input type="tel" name="telefono" class="form-control shadow-sm" placeholder="Ej: +569 1234 5678" value="<?= htmlspecialchars($telefono ?? '') ?>" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Dirección de la Empresa</label>
+                            <input type="text" name="direccion" class="form-control shadow-sm" placeholder="Ej: Av. Principal 123, Oficina 402" value="<?= htmlspecialchars($direccion ?? '') ?>" required>
+                        </div>
                         <div class="col-md-12">
                             <label class="form-label">Título de la Práctica</label>
                             <input type="text" name="titulo" class="form-control shadow-sm" placeholder="Ej: Practicante de Desarrollo Web Laravel" value="<?= htmlspecialchars($titulo ?? '') ?>" required>
@@ -246,26 +348,36 @@ if ($resCarreras) {
                             <label class="form-label">Descripción de Actividades</label>
                             <textarea name="descripcion" class="form-control shadow-sm" rows="4" placeholder="Detalle las tareas que realizará el alumno..." required><?= htmlspecialchars($descripcion ?? '') ?></textarea>
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Requisitos de la Práctica</label>
+                            <textarea name="requisitos" class="form-control shadow-sm" rows="3" placeholder="Ej: Conocimientos en PHP, SQL, disponibilidad inmediata..." required><?= htmlspecialchars($requisitos ?? '') ?></textarea>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Carrera Solicitada</label>
-                            <select name="id_carrera" class="form-select shadow-sm" required>
-                                <option value="" selected disabled>Seleccione una opción...</option>
+                            <input type="text" name="nombre_carrera" list="carrerasList" class="form-control shadow-sm" placeholder="Escriba para buscar carrera..." value="<?= htmlspecialchars($nombre_carrera_input ?? '') ?>" required>
+                            <datalist id="carrerasList">
                                 <?php if (count($carreras) > 0): ?>
                                     <?php foreach ($carreras as $carrera): ?>
-                                        <option value="<?= $carrera['id_carrera'] ?>" <?= (isset($id_carrera) && $id_carrera == $carrera['id_carrera']) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($carrera['nombre_carrera']) ?>
-                                        </option>
+                                        <option value="<?= htmlspecialchars($carrera['nombre_carrera']) ?>">
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <option value="1" <?= (isset($id_carrera) && $id_carrera == 1) ? 'selected' : '' ?>>Ingeniería Civil Informática (Demo)</option>
-                                    <option value="2" <?= (isset($id_carrera) && $id_carrera == 2) ? 'selected' : '' ?>>Ingeniería Comercial (Demo)</option>
-                                    <option value="3" <?= (isset($id_carrera) && $id_carrera == 3) ? 'selected' : '' ?>>Psicología (Demo)</option>
+                                    <option value="Ingeniería Civil Informática">
+                                    <option value="Ingeniería Comercial">
+                                    <option value="Psicología">
                                 <?php endif; ?>
-                            </select>
+                            </datalist>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Correo de Contacto (RRHH)</label>
-                            <input type="email" name="correo" class="form-control shadow-sm" placeholder="contacto@empresa.cl" value="<?= htmlspecialchars($correo ?? '') ?>" required>
+                            <input type="email" name="correo" class="form-control shadow-sm" placeholder="contacto@empresa.cl" value="<?= htmlspecialchars($correo ?? '') ?>" autocomplete="off" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cupos Disponibles</label>
+                            <input type="number" name="cupos" class="form-control shadow-sm" min="1" max="50" value="<?= htmlspecialchars($cupos ?? 1) ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Duración de la Práctica (Meses)</label>
+                            <input type="number" name="duracion" class="form-control shadow-sm" min="1" max="12" value="<?= htmlspecialchars($duracion ?? 3) ?>" required>
                         </div>
                         <div class="col-12 mt-4">
                             <div class="form-check mb-3">
