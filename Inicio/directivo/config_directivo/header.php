@@ -34,7 +34,7 @@ $nav_items = [
             min-height: 100vh;
         }
 
-        /* ── Sidebar ── */
+        /** Creación y edición del sidebar */
         #sidebar {
             width: var(--sidebar-width);
             min-height: 100vh;
@@ -107,7 +107,7 @@ $nav_items = [
             display: block;
         }
 
-        /* ── Main ── */
+        /** Principal */
         #main {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
@@ -208,7 +208,7 @@ $nav_items = [
         .badge-postulado   { background: #fef3c7; color: #92400e; }
         .badge-cancelada   { background: #fee2e2; color: #991b1b; }
 
-        /* Progress bar */
+        /* Barra progreso */
         .progress { height: 6px; border-radius: 4px; }
 
         /* Tabla */
@@ -226,7 +226,7 @@ $nav_items = [
             vertical-align: middle;
         }
 
-        /* Botón sidebar mobile */
+        /** */
         #sidebarToggle {
             display: none;
             background: none;
@@ -245,7 +245,7 @@ $nav_items = [
 </head>
 <body>
 
-<!-- ── Sidebar ── -->
+/** Side bar html */
 <nav id="sidebar">
     <div class="sidebar-brand">
         <h5><i class="bi bi-mortarboard-fill me-2"></i>SGPPE</h5>
@@ -275,7 +275,7 @@ $nav_items = [
     </div>
 </nav>
 
-<!-- ── Main wrapper ── -->
+<!-- Estructura pagina principal -->
 <div id="main">
     <div id="topbar">
         <div class="d-flex align-items-center gap-3">

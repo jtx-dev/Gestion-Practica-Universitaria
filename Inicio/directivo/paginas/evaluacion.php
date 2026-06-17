@@ -1,5 +1,5 @@
 <?php
-require_once '../config_directivo/conexion.php';
+require_once 'config_directivo/conexion.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_evaluacion'])
     }
 }
 
-// Prácticas pendientes de evaluación por el directivo
+// Practicas pendientes de evaluación por el directivo
 $pendientes = mysqli_query($conexion,"
     SELECT p.id_practica, e.nombre, e.apellido, o.titulo, emp.razon_social,
            p.fecha_inicio, p.estado_practica

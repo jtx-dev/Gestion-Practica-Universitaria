@@ -1,5 +1,9 @@
 <?php
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+
 require_once 'config_directivo/auth.php';
 
 $paginas_validas = ['inicio', 'estudiantes', 'indicadores', 'evaluacion', 'reportes'];

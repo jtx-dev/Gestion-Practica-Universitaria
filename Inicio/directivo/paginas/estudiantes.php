@@ -1,8 +1,8 @@
 <?php
-require_once '../config_directivo/conexion.php';
+require_once 'config_directivo/conexion.php';
 
 
-// Filtros
+/** Filtros */
 $filtro_estado = isset($_GET['estado']) ? mysqli_real_escape_string($conexion ,$_GET['estado']) : '';
 $busqueda      = isset($_GET['buscar']) ? mysqli_real_escape_string($conexion ,$_GET['buscar']) : '';
 
@@ -38,7 +38,7 @@ $estudiantes = mysqli_query($conexion, "
 $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
 ?>
 
-<!-- Filtros -->
+<!- - Consultas y filtros - - > 
 <div class="card-section mb-4">
     <div class="card-header-custom">
         <i class="bi bi-funnel-fill text-primary"></i>
@@ -75,7 +75,7 @@ $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
         </form>
     </div>
 </div>
-
+<! - - Consulta de estudiantes en practica - - >
 <?php if (mysqli_num_rows($estudiantes) === 0): ?>
 <div class="card-section p-5 text-center text-muted">
     <i class="bi bi-people fs-1 d-block mb-2"></i>
@@ -84,7 +84,7 @@ $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
 </div>
 
 <?php else: ?>
-<!-- Tabla de estudiantes -->
+<!- - Tabla estudiantes - - > 
 <div class="card-section">
     <div class="card-header-custom justify-content-between">
         <div class="d-flex align-items-center gap-2">
@@ -156,7 +156,7 @@ $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
 <?php endif; ?>
 
 <?php
-// ── Detalle de estudiante ──
+// Detalle estudiantes 
 if ($ver_id):
     $conn2 = $conexion;
     $resultado = mysqli_query($conn2,"
@@ -219,7 +219,7 @@ if ($ver_id):
                 </p>
             </div>
         </div>
-
+        // busqueda de bitacoras
         <h6 class="fw-bold text-primary mb-3"><i class="bi bi-journal-text me-2"></i>Bitácoras registradas</h6>
         <?php if (mysqli_num_rows($bitacoras) === 0): ?>
             <p class="text-muted">Este estudiante no ha registrado bitácoras aún.</p>

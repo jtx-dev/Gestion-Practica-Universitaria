@@ -1,5 +1,5 @@
 <?php
-require_once '../config_directivo/conexion.php';
+require_once 'config_directivo/conexion.php';
 
 // Estadísticas rápidas para la carrera del directivo
 $stats = [];
@@ -11,8 +11,12 @@ $r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM Practica p
     AND p.estado_practica NOT IN ('Finalizada','Cancelada')");
 
 $stats['activos'] = mysqli_fetch_assoc($r)['total'];
+$fila = mysqli_fetch_assoc($r);
 
-// Prácticas finalizadas
+echo "<pre>";
+print_r($fila);
+echo "</pre>";
+// Practicas finalizadas
 $r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM Practica p
     JOIN Estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera AND p.estado_practica = 'Finalizada'");
@@ -34,7 +38,7 @@ $r = mysqli_query($conexion, "SELECT ROUND(AVG(p.nota_final),1) as promedio FROM
     WHERE e.id_carrera = $id_carrera AND p.nota_final IS NOT NULL");
 
 $stats['promedio'] = mysqli_fetch_assoc($r)['promedio'] ?? '—';
-// Últimas 5 prácticas con actividad reciente
+// Ultimas 5 prácticas con actividad reciente
 $recientes = mysqli_query($conexion,"
     SELECT e.nombre, e.apellido, p.estado_practica, p.fecha_inicio, o.titulo
     FROM Practica p
