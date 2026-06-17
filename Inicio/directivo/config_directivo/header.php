@@ -256,7 +256,7 @@ $nav_items = [
         <?php foreach ($nav_items as $key => $item): ?>
         <li class="nav-item">
             <a class="nav-link <?= $pagina_actual === $key ? 'active' : '' ?>"
-               href="inicio.php?pagina=<?= $key ?>">
+               href="index.php?pagina=<?= $key ?>">
                 <i class="bi <?= $item['icono'] ?>"></i>
                 <?= $item['label'] ?>
             </a>
