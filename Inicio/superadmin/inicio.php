@@ -10,7 +10,7 @@ $sqlResumen = "SELECT
     COUNT(*) AS total,
     SUM(CASE WHEN estado_institucion = 'activa' THEN 1 ELSE 0 END) AS activas,
     SUM(CASE WHEN estado_institucion = 'inactiva' THEN 1 ELSE 0 END) AS inactivas
-FROM Institucion";
+FROM institucion";
 $resultadoResumen = mysqli_query($conexion, $sqlResumen);
 
 if ($resultadoResumen) {
@@ -21,7 +21,7 @@ if ($resultadoResumen) {
 }
 
 $sqlUltimas = "SELECT nombre, estado_institucion
-FROM Institucion
+FROM institucion
 ORDER BY id_institucion DESC
 LIMIT 5";
 $resultadoUltimas = mysqli_query($conexion, $sqlUltimas);

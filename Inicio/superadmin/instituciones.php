@@ -11,9 +11,9 @@ function limpiarTexto($valor)
 }
 
 $sqlAdministradores = "SELECT u.id_usuario, u.correo, a.nombre, a.apellido
-FROM Usuario u
-INNER JOIN Administrador a ON a.id_usuario = u.id_usuario
-INNER JOIN Rol r ON r.id_rol = u.id_rol
+FROM usuario u
+INNER JOIN administrador a ON a.id_usuario = u.id_usuario
+INNER JOIN rol r ON r.id_rol = u.id_rol
 WHERE r.nombre_rol = 'Administrador' AND u.estado_cuenta = 'activa'
 ORDER BY u.correo";
 $resultadoAdministradores = mysqli_query($conexion, $sqlAdministradores);
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensaje = 'El nombre y el administrador de la institución son obligatorios.';
             $tipoMensaje = 'danger';
         } else {
-            $stmt = mysqli_prepare($conexion, "INSERT INTO Institucion (nombre, logo_institucion, estado_institucion, id_administrador) VALUES (?, ?, ?, ?)");
+            $stmt = mysqli_prepare($conexion, "INSERT INTO institucion (nombre, logo_institucion, estado_institucion, id_administrador) VALUES (?, ?, ?, ?)");
             mysqli_stmt_bind_param($stmt, "sssi", $nombre, $logo, $estado, $idAdministrador);
 
             if (mysqli_stmt_execute($stmt)) {
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $idInstitucionNueva = mysqli_insert_id($conexion);
 
                 if ($idAdministrador > 0) {
-                    $stmtUsuario = mysqli_prepare($conexion, "UPDATE Usuario SET id_institucion = ? WHERE id_usuario = ?");
+                    $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET id_institucion = ? WHERE id_usuario = ?");
                     mysqli_stmt_bind_param($stmtUsuario, "ii", $idInstitucionNueva, $idAdministrador);
                     mysqli_stmt_execute($stmtUsuario);
                     mysqli_stmt_close($stmtUsuario);
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensaje = 'El nombre y el administrador son obligatorios para actualizar.';
             $tipoMensaje = 'danger';
         } else {
-            $consultaActual = mysqli_prepare($conexion, "SELECT id_administrador FROM Institucion WHERE id_institucion = ?");
+            $consultaActual = mysqli_prepare($conexion, "SELECT id_administrador FROM institucion WHERE id_institucion = ?");
             mysqli_stmt_bind_param($consultaActual, "i", $id);
             mysqli_stmt_execute($consultaActual);
             $resultadoActual = mysqli_stmt_get_result($consultaActual);
@@ -78,18 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $idAdministradorAnterior = (int) ($institucionActual['id_administrador'] ?? 0);
 
-            $stmt = mysqli_prepare($conexion, "UPDATE Institucion SET nombre = ?, logo_institucion = ?, estado_institucion = ?, id_administrador = ? WHERE id_institucion = ?");
+            $stmt = mysqli_prepare($conexion, "UPDATE institucion SET nombre = ?, logo_institucion = ?, estado_institucion = ?, id_administrador = ? WHERE id_institucion = ?");
             mysqli_stmt_bind_param($stmt, "sssii", $nombre, $logo, $estado, $idAdministrador, $id);
 
             if (mysqli_stmt_execute($stmt)) {
                 if ($idAdministradorAnterior > 0 && $idAdministradorAnterior !== $idAdministrador) {
-                    $stmtLimpiarUsuario = mysqli_prepare($conexion, "UPDATE Usuario SET id_institucion = NULL WHERE id_usuario = ?");
+                    $stmtLimpiarUsuario = mysqli_prepare($conexion, "UPDATE usuario SET id_institucion = NULL WHERE id_usuario = ?");
                     mysqli_stmt_bind_param($stmtLimpiarUsuario, "i", $idAdministradorAnterior);
                     mysqli_stmt_execute($stmtLimpiarUsuario);
                     mysqli_stmt_close($stmtLimpiarUsuario);
                 }
 
-                $stmtAsignarUsuario = mysqli_prepare($conexion, "UPDATE Usuario SET id_institucion = ? WHERE id_usuario = ?");
+                $stmtAsignarUsuario = mysqli_prepare($conexion, "UPDATE usuario SET id_institucion = ? WHERE id_usuario = ?");
                 mysqli_stmt_bind_param($stmtAsignarUsuario, "ii", $id, $idAdministrador);
                 mysqli_stmt_execute($stmtAsignarUsuario);
                 mysqli_stmt_close($stmtAsignarUsuario);
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $estado = ($_POST['estado'] ?? 'activa') === 'inactiva' ? 'inactiva' : 'activa';
 
         if ($id > 0) {
-            $stmt = mysqli_prepare($conexion, "UPDATE Institucion SET estado_institucion = ? WHERE id_institucion = ?");
+            $stmt = mysqli_prepare($conexion, "UPDATE institucion SET estado_institucion = ? WHERE id_institucion = ?");
             mysqli_stmt_bind_param($stmt, "si", $estado, $id);
 
             if (mysqli_stmt_execute($stmt)) {
@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int) ($_POST['id_institucion'] ?? 0);
 
         if ($id > 0) {
-            $consultaValidacion = mysqli_prepare($conexion, "SELECT id_administrador FROM Institucion WHERE id_institucion = ?");
+            $consultaValidacion = mysqli_prepare($conexion, "SELECT id_administrador FROM institucion WHERE id_institucion = ?");
             mysqli_stmt_bind_param($consultaValidacion, "i", $id);
             mysqli_stmt_execute($consultaValidacion);
             $resultadoValidacion = mysqli_stmt_get_result($consultaValidacion);
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensaje = 'No se puede eliminar la institución mientras tenga un administrador asignado. Elimina primero ese administrador.';
                 $tipoMensaje = 'warning';
             } else {
-                $stmt = mysqli_prepare($conexion, "DELETE FROM Institucion WHERE id_institucion = ?");
+                $stmt = mysqli_prepare($conexion, "DELETE FROM institucion WHERE id_institucion = ?");
                 mysqli_stmt_bind_param($stmt, "i", $id);
 
                 if (mysqli_stmt_execute($stmt)) {
@@ -164,8 +164,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $instituciones = [];
 $consulta = mysqli_query($conexion, "SELECT i.id_institucion, i.nombre, i.logo_institucion, i.estado_institucion, i.id_administrador, u.correo AS correo_administrador
-FROM Institucion i
-LEFT JOIN Usuario u ON u.id_usuario = i.id_administrador
+FROM institucion i
+LEFT JOIN usuario u ON u.id_usuario = i.id_administrador
 ORDER BY i.id_institucion DESC");
 if ($consulta) {
     while ($fila = mysqli_fetch_assoc($consulta)) {
