@@ -1,5 +1,5 @@
 <?php
-require_once 'config_directivo/conexion.php';
+require_once __DIR__ . '/../../../conexion.php';
 
 // Distribución por estado de práctica
 $dist_estado = mysqli_query($conexion, "

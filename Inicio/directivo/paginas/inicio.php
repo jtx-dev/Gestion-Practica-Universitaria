@@ -1,5 +1,5 @@
 <?php
-require_once 'config_directivo/conexion.php';
+require_once __DIR__ . '/../../../conexion.php';
 
 // Estadísticas rápidas para la carrera del directivo
 $stats = [];

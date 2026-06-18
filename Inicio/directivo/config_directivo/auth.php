@@ -20,7 +20,7 @@ $nombre_directivo = trim($_SESSION['nombre_completo'] ?? ($_SESSION['nombre_usua
 
 // Obtener id_carrera del directivo desde la BD
 // (no viene en sesión, hay que consultarlo)
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../../../conexion.php';
 mysqli_set_charset($conexion, 'utf8mb4');
 
 $stmt = mysqli_prepare($conexion, "SELECT id_carrera FROM directivo WHERE id_usuario = ? LIMIT 1");
