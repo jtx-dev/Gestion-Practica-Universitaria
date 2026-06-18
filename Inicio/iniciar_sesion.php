@@ -24,7 +24,7 @@ function login_redirigir_por_rol(string $rol): void
     }
 
     if ($rol === 'Directivo') {
-        header('Location: directivo/index.php');
+        header('Location: directivo/inicio.php');
         exit;
     }
     if ($rol === 'Coordinador') {

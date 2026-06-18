@@ -136,7 +136,7 @@ if ($exportar === '1' && in_array($formato, ['pdf','excel'])) {
                 <h6>Configurar reporte</h6>
             </div>
             <div class="p-4">
-                <form method="GET" action="index.php" id="formReporte">
+                <form method="GET" action="inicio.php" id="formReporte">
                     <input type="hidden" name="pagina" value="reportes">
 
                     <div class="mb-3">

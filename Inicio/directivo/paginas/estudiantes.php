@@ -45,7 +45,7 @@ $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
         <h6>Filtrar estudiantes</h6>
     </div>
     <div class="p-3">
-        <form method="GET" action="index.php" class="row g-2 align-items-end">
+        <form method="GET" action="inicio.php" class="row g-2 align-items-end">
             <input type="hidden" name="pagina" value="estudiantes">
             <div class="col-sm-6 col-md-5">
                 <label class="form-label small fw-semibold text-muted">Buscar por nombre</label>
@@ -68,7 +68,7 @@ $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
                 <button type="submit" class="btn btn-primary flex-fill">
                     <i class="bi bi-search me-1"></i>Buscar
                 </button>
-                <a href="index.php?pagina=estudiantes" class="btn btn-outline-secondary">
+                <a href="inicio.php?pagina=estudiantes" class="btn btn-outline-secondary">
                     <i class="bi bi-x-lg"></i>
                 </a>
             </div>
@@ -142,7 +142,7 @@ $ver_id = isset($_GET['ver']) ? (int)$_GET['ver'] : null;
                     </span>
                 </td>
                 <td>
-                    <a href="index.php?pagina=estudiantes&ver=<?= $row['id_usuario'] ?>"
+                    <a href="inicio.php?pagina=estudiantes&ver=<?= $row['id_usuario'] ?>"
                        class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-eye me-1"></i>Ver detalle
                     </a>
@@ -185,7 +185,7 @@ if ($ver_id):
             <i class="bi bi-person-lines-fill text-primary"></i>
             <h6>Detalle — <?= htmlspecialchars($p['nombre'] . ' ' . $p['apellido']) ?></h6>
         </div>
-        <a href="index.php?pagina=estudiantes" class="btn btn-sm btn-outline-secondary">
+        <a href="inicio.php?pagina=estudiantes" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
     </div>

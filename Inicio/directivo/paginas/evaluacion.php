@@ -183,7 +183,7 @@ $modal_id = isset($_GET['evaluar']) ? (int)$_GET['evaluar'] : null;
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="index.php?pagina=evaluacion">
+            <form method="POST" action="inicio.php?pagina=evaluacion">
                 <div class="modal-body">
                     <input type="hidden" name="id_practica" id="modal_id_practica">
                     <p class="mb-3 text-muted small">
