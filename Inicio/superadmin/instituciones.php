@@ -137,30 +137,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int) ($_POST['id_institucion'] ?? 0);
 
         if ($id > 0) {
-            $consultaValidacion = mysqli_prepare($conexion, "SELECT id_administrador FROM institucion WHERE id_institucion = ?");
-            mysqli_stmt_bind_param($consultaValidacion, "i", $id);
-            mysqli_stmt_execute($consultaValidacion);
-            $resultadoValidacion = mysqli_stmt_get_result($consultaValidacion);
-            $institucionValidacion = $resultadoValidacion ? mysqli_fetch_assoc($resultadoValidacion) : null;
-            mysqli_stmt_close($consultaValidacion);
+            mysqli_begin_transaction($conexion);
+            try {
+                // Helper para ejecutar un DELETE con una lista de IDs
+                $execute_delete = function($table, $column, $ids) use ($conexion) {
+                    if (empty($ids)) return true;
+                    $ids_list = implode(',', array_map('intval', $ids));
+                    $sql = "DELETE FROM $table WHERE $column IN ($ids_list)";
+                    $stmt = mysqli_prepare($conexion, $sql);
+                    if (!$stmt || !mysqli_stmt_execute($stmt)) {
+                        throw new Exception(mysqli_error($conexion));
+                    }
+                    mysqli_stmt_close($stmt);
+                    return true;
+                };
 
-            $idAdministradorAsignado = (int) ($institucionValidacion['id_administrador'] ?? 0);
+                // 1. Obtener todos los IDs relacionados con la institución
+                $get_ids = function($sql, $params = []) use ($conexion) {
+                    $stmt = mysqli_prepare($conexion, $sql);
+                    if ($params) {
+                        mysqli_stmt_bind_param($stmt, str_repeat('i', count($params)), ...$params);
+                    }
+                    if (!mysqli_stmt_execute($stmt)) throw new Exception(mysqli_error($conexion));
+                    $result = mysqli_stmt_get_result($stmt);
+                    $ids = [];
+                    while ($row = mysqli_fetch_array($result, MYSQLI_NUM)) {
+                        $ids[] = $row[0];
+                    }
+                    mysqli_stmt_close($stmt);
+                    return $ids;
+                };
 
-            if ($idAdministradorAsignado > 0) {
-                $mensaje = 'No se puede eliminar la institución mientras tenga un administrador asignado. Elimina primero ese administrador.';
-                $tipoMensaje = 'warning';
-            } else {
-                $stmt = mysqli_prepare($conexion, "DELETE FROM institucion WHERE id_institucion = ?");
-                mysqli_stmt_bind_param($stmt, "i", $id);
+                $user_ids = $get_ids("SELECT id_usuario FROM usuario WHERE id_institucion = ?", [$id]);
+                $carrera_ids = $get_ids("SELECT id_carrera FROM carrera WHERE id_institucion = ?", [$id]);
+                $oferta_ids = !empty($carrera_ids) ? $get_ids("SELECT id_oferta FROM oferta_practica WHERE id_carrera IN (" . implode(',', $carrera_ids) . ")") : [];
+                $practica_ids_by_user = !empty($user_ids) ? $get_ids("SELECT id_practica FROM practica WHERE id_estudiante IN (" . implode(',', $user_ids) . ")") : [];
+                $practica_ids_by_oferta = !empty($oferta_ids) ? $get_ids("SELECT id_practica FROM practica WHERE id_oferta IN (" . implode(',', $oferta_ids) . ")") : [];
+                $practica_ids = array_unique(array_merge($practica_ids_by_user, $practica_ids_by_oferta));
 
-                if (mysqli_stmt_execute($stmt)) {
-                    $mensaje = 'Institución eliminada correctamente.';
-                } else {
-                    $mensaje = 'No se pudo eliminar la institución.';
-                    $tipoMensaje = 'danger';
+                // 2. Ejecutar borrados en orden inverso de dependencia
+                
+                // Nivel 5: Dependencias de 'practica'
+                $execute_delete('asistencia', 'id_practica', $practica_ids);
+                $execute_delete('bitacora', 'id_practica', $practica_ids);
+                $execute_delete('evaluacion', 'id_practica', $practica_ids);
+                $execute_delete('evaluacion_empresa', 'id_practica', $practica_ids);
+
+                // Nivel 4: Dependencias de 'oferta' y 'estudiante' (usuario)
+                $execute_delete('oferta_competencias', 'id_oferta', $oferta_ids);
+                $execute_delete('postulacion', 'id_oferta', $oferta_ids);
+                if (!empty($user_ids)) {
+                    $execute_delete('postulacion', 'id_estudiante', $user_ids);
+                    $execute_delete('estudiante_competencias', 'id_estudiante', $user_ids);
                 }
 
-                mysqli_stmt_close($stmt);
+                // Nivel 3: 'practica', 'asignacion', 'oferta_practica'
+                $execute_delete('practica', 'id_practica', $practica_ids);
+                if (!empty($user_ids)) {
+                     $execute_delete('asignacion', 'id_estudiante', $user_ids);
+                }
+                $execute_delete('oferta_practica', 'id_oferta', $oferta_ids);
+
+                // Nivel 2: Perfiles de usuario y competencias
+                if (!empty($carrera_ids)) {
+                     $execute_delete('competencias', 'id_carrera', $carrera_ids);
+                }
+                if (!empty($user_ids)) {
+                    $execute_delete('notificacion', 'id_usuario', $user_ids);
+                    $execute_delete('estudiante', 'id_usuario', $user_ids);
+                    $execute_delete('coordinador', 'id_usuario', $user_ids);
+                    $execute_delete('directivo', 'id_usuario', $user_ids);
+                    $execute_delete('empresa', 'id_usuario', $user_ids);
+                    // Importante: Des-asigna al administrador de la institución antes de borrarlo
+                    $stmt_unassign = mysqli_prepare($conexion, "UPDATE institucion SET id_administrador = NULL WHERE id_institucion = ?");
+                    mysqli_stmt_bind_param($stmt_unassign, "i", $id);
+                    mysqli_stmt_execute($stmt_unassign);
+                    mysqli_stmt_close($stmt_unassign);
+                    $execute_delete('administrador', 'id_usuario', $user_ids);
+                }
+                
+                // Nivel 1: 'usuario' y 'carrera'
+                $execute_delete('usuario', 'id_institucion', [$id]);
+                $execute_delete('carrera', 'id_institucion', [$id]);
+
+                // Nivel 0: 'institucion'
+                $execute_delete('institucion', 'id_institucion', [$id]);
+
+                mysqli_commit($conexion);
+                $mensaje = 'Institución y todos sus datos asociados fueron eliminados correctamente.';
+                $tipoMensaje = 'success';
+            } catch (Exception $e) {
+                mysqli_rollback($conexion);
+                $mensaje = 'Error al eliminar la institución: ' . $e->getMessage();
+                $tipoMensaje = 'danger';
             }
         } else {
             $mensaje = 'ID de institución inválido.';

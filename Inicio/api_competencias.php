@@ -1,8 +1,26 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['id_usuario'])) {
+    header('Content-Type: application/json');
+    http_response_code(401);
+    echo json_encode(['error' => 'No autenticado']);
+    exit;
+}
 include('../conexion.php');
 
 $carrera = $_GET['carrera'] ?? '';
 $id_estudiante = isset($_GET['id_estudiante']) ? (int)$_GET['id_estudiante'] : 0;
+
+// Un estudiante solo puede consultar sus propias competencias
+if ($id_estudiante !== (int)$_SESSION['id_usuario']) {
+    header('Content-Type: application/json');
+    http_response_code(403);
+    echo json_encode(['error' => 'No autorizado para este recurso']);
+    exit;
+}
 
 if (empty($carrera)) {
     echo json_encode([]);
