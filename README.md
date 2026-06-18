@@ -1,42 +1,211 @@
 # Gestion-Practica-Universitaria
-Sistema de gestión de práctica y empleabilidad
-Definición del problema:
 
-El problema radica en la gestión ineficiente de las prácticas profesionales debido al uso de herramientas dispersas, lo que dificulta el seguimiento, la visibilidad de oportunidades y la obtención de datos. Por ello, se requiere desarrollar una plataforma web que centralice y optimice todo el proceso.
+Sistema web para centralizar la gestión de prácticas profesionales, asignaciones académicas y seguimiento institucional.
 
-## Módulos del sistema:
+## Badges
 
-### Módulo de gestión base.
-1. Registro, autenticación e inicio de sesion de usuarios (Estudiantes, coordinadores, empresa, director).
-2. Control de acceso según roles (permisos por alcance de uso entre los roles).
-3. Gestión de perfiles (Eliminar, visualizar, actualizar).
+[![Estado](https://img.shields.io/badge/status-en%20desarrollo-orange)](#)
+[![Versión](https://img.shields.io/badge/version-1.0.0-blue)](#)
+[![Licencia](https://img.shields.io/badge/license-MIT-green)](#)
 
-### Módulo de gestión de personas. 
-1. Asignación de coordinador y directivo a un estudiante (tomando en cuenta de que el directivo sería el jefe/a de la carrera respectiva).
+## Introducción
 
-### Módulo de asignación de estudiantes.
-1. Visualización de estudiantes postulantes.
-2. Control de asignación de estudiantes a una oferta de práctica (publicada por empresa y asignada por coordinador).
+Gestion-Practica-Universitaria es una plataforma desarrollada en PHP y MySQL para resolver la fragmentación en la administración de prácticas profesionales. El sistema centraliza el ciclo completo: autenticación, administración institucional, asignación de personas clave, publicación de ofertas, postulación de estudiantes, seguimiento de prácticas y generación de reportes.
 
-### Módulo de gestión de prácticas: 
-1. Gestión de ofertas por empresa.
-2. Publicación de ofertas por empresa.
-3. Visualización de ofertas publicadas por cada empresa (Vista estudiante y vista coordinador).
-4. Postulación de estudiante por CV.
-5. Registrar avances de práctica (estudiante se encarga de subir el avance de practica)
-6. Creación de acta de cierre de práctica.
-7. Sistema de Notificaciones: Alertas vía correo electrónico (o WhatsApp) para avisar sobre cambios de estado o evaluaciones pendientes.
+El objetivo principal es reducir el uso de herramientas dispersas y entregar trazabilidad, control por roles y una mejor visibilidad del proceso académico y administrativo.
 
-### Módulo de recomendación de estudiantes por perfil
-1. Matching entre estudiantes y oferta laboral de la empresa.
-2. Visualización de la recomendación de estudiantes para el coordinador de la práctica (estudiantes que tienen matching con la oferta de la empresa) según
-3. habilidades, carrera y nivel de avance curricular.
+## Características principales
 
-## Roles del sistema y sus respectivos permisos:
+- Autenticación y redirección por rol.
+- Gestión de usuarios, roles, carreras e instituciones.
+- Asignación de coordinador y directivo a estudiantes.
+- Administración de ofertas de práctica por empresa.
+- Postulación de estudiantes con CV.
+- Seguimiento de avances, evaluaciones y cierre de práctica.
+- Paneles diferenciados para administrador, coordinador, directivo, estudiante, empresa y superadministrador.
+- Registro de auditoría para acciones clave del sistema.
+- Estructura preparada para reportes y exportación de datos.
+- Validación por institución para evitar cruces de información entre organizaciones.
 
-- Estudiante: Buscar ofertas laborales, postular con CV, registrar, evaluar la empresa y visualizar progreso de la práctica.
-- Empresa: Ofrecer ofertas laborales, proceso de selección y evaluación al desempeño
-- Coordinador: Aprobar y asignar practicantes, realizar el seguimiento a la práctica, completar la evaluación académica
-- Directivo: Visualización global y permiso de exportación de datos
-- Super Administrador: Crear nuevas instituciones
-- Administrador: Administrar su propia institución en conjunto con su configuración y personalización.
+## Tecnologías utilizadas
+
+| Tecnología | Uso |
+| --- | --- |
+| PHP | Lógica de servidor y renderizado de vistas |
+| MySQL / MariaDB | Persistencia de datos |
+| HTML5 | Estructura de interfaces |
+| CSS3 | Estilos visuales personalizados |
+| JavaScript | Interacción en formularios y modales |
+| Bootstrap 5 | Componentes UI y layout responsive |
+| Bootstrap Icons | Iconografía del sistema |
+| XAMPP | Entorno de desarrollo local recomendado |
+
+## Instalación
+
+### Requisitos previos
+
+- PHP 8.x o superior.
+- MySQL o MariaDB.
+- Apache o un servidor web compatible.
+- XAMPP, WAMP o Laragon para desarrollo local.
+- Git para clonar el repositorio.
+
+### Paso a paso
+
+1. Clona el repositorio en tu entorno local.
+
+```bash
+git clone [URL_DEL_REPOSITORIO]
+```
+
+2. Copia el proyecto en el directorio web de tu servidor local.
+
+```bash
+htdocs/Gestion-Practica-Universitaria-1
+```
+
+3. Crea la base de datos `sgppe` en MySQL o MariaDB.
+
+```sql
+CREATE DATABASE sgppe CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+```
+
+4. Importa el script SQL del proyecto.
+
+```bash
+mysql -u root -p sgppe < [ruta_al_archivo_sql]
+```
+
+Si prefieres hacerlo desde phpMyAdmin, selecciona la base de datos `sgppe` y usa la opción de importación para cargar el archivo `.sql`.
+
+5. Verifica la configuración de conexión.
+
+El archivo actual de conexión es [conexion.php](conexion.php). Ajusta los valores según tu entorno local o migra esos datos a variables de entorno si quieres endurecer la configuración.
+
+```php
+$conexion = mysqli_connect("localhost", "root", "", "sgppe");
+```
+
+6. Inicia Apache y MySQL desde XAMPP.
+
+7. Abre el proyecto en tu navegador.
+
+```text
+http://localhost/Gestion-Practica-Universitaria-1/Inicio/inicio.php
+```
+
+### Dependencias de entorno
+
+Actualmente el proyecto no depende de `npm`, `pip` ni contenedores Docker para funcionar. Si deseas modernizar el despliegue, puedes agregar un entorno Docker o un gestor de dependencias frontend más adelante.
+
+## Uso
+
+### Acceso al sistema
+
+1. Inicia sesión desde la pantalla pública.
+2. El sistema redirige al panel correspondiente según el rol del usuario.
+3. Gestiona usuarios, ofertas, asignaciones y reportes desde el módulo asignado.
+
+### Ejemplo de flujo de administración
+
+```text
+Administrador -> Usuarios -> Crear usuario
+Administrador -> Asignaciones -> Crear o editar asignación
+Administrador -> Roles -> Administrar catálogo de roles
+```
+
+### Ejemplo de operación sobre la base de datos
+
+```sql
+SELECT u.id_usuario, u.correo, r.nombre_rol
+FROM usuario u
+INNER JOIN rol r ON r.id_rol = u.id_rol
+WHERE u.id_institucion = 5;
+```
+
+### Ejemplo de estructura de acceso por rol
+
+```text
+Estudiante: postular y revisar seguimiento de práctica
+Coordinador: revisar estudiantes, ofertas y asignaciones
+Directivo: visualizar indicadores y reportes
+Empresa: publicar ofertas y revisar postulaciones
+Superadministrador: crear instituciones
+Administrador: gestionar su institución
+```
+
+## Configuración / Variables de entorno
+
+El proyecto actualmente usa conexión directa en `conexion.php`. Si decides mover la configuración a un archivo `.env`, estas son las variables sugeridas:
+
+```env
+APP_NAME="Gestion-Practica-Universitaria"
+APP_ENV=local
+APP_URL=http://localhost/Gestion-Practica-Universitaria-1
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=sgppe
+DB_USERNAME=root
+DB_PASSWORD=
+
+SESSION_TIMEOUT_MINUTES=30
+MAIL_HOST=[Insertar host SMTP aquí]
+MAIL_PORT=[Insertar puerto SMTP aquí]
+MAIL_USERNAME=[Insertar usuario SMTP aquí]
+MAIL_PASSWORD=[Insertar contraseña SMTP aquí]
+MAIL_FROM_ADDRESS=[Insertar correo remitente aquí]
+MAIL_FROM_NAME="SGPPE"
+```
+
+Si tu instalación no usa `.env`, puedes mantener la configuración en [conexion.php](conexion.php) y documentar esos valores internamente.
+
+## Roadmap
+
+- Normalización completa de nombres de roles en todo el sistema.
+- Exportación de reportes en PDF y Excel.
+- Notificaciones automáticas por correo.
+- Panel de indicadores con métricas por institución.
+- Mejoras en la trazabilidad de asignaciones y evaluaciones.
+- Implementación opcional de variables de entorno para la conexión a la base de datos.
+- Contenerización con Docker para facilitar despliegue y portabilidad.
+
+## Contribución
+
+1. Crea una rama a partir de `main` o de la rama de integración acordada.
+2. Mantén los cambios enfocados en un solo objetivo por pull request.
+3. Usa mensajes de commit descriptivos.
+4. Verifica que el cambio no rompa la lógica por institución ni el flujo de autenticación.
+5. Abre un pull request con resumen, alcance y capturas si aplica.
+
+Flujo sugerido:
+
+```bash
+git checkout -b feature/nombre-de-la-mejora
+git add .
+git commit -m "Describe el cambio"
+git push origin feature/nombre-de-la-mejora
+```
+
+## Licencia
+
+Este proyecto se distribuye bajo licencia MIT.
+
+```text
+[Insertar archivo LICENSE aquí si aún no existe]
+```
+
+## Contacto
+
+- Autor: [Insertar nombre del autor aquí]
+- Correo: [Insertar correo de contacto aquí]
+- GitHub: [Insertar enlace al perfil o repositorio aquí]
+- LinkedIn: [Insertar enlace de contacto aquí]
+
+## Información del proyecto
+
+- Lenguaje principal: PHP.
+- Base de datos: MySQL / MariaDB.
+- Frontend: HTML, CSS y JavaScript con Bootstrap 5.
+- Tipo de aplicación: sistema web monolítico con vistas por rol.
+- Contexto funcional: gestión de prácticas universitarias con control institucional.
