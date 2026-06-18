@@ -1,7 +1,16 @@
 <?php
 include('../../conexion.php');
+//Para ocultar ofertas ya postuladas
+$id_estudiante = 3;
 $sql = "
-    SELECT * FROM oferta_practica WHERE estado_oferta = 'activa'
+SELECT *
+FROM oferta_practica
+WHERE id_oferta NOT IN
+(
+    SELECT id_oferta
+    FROM postulacion
+    WHERE id_estudiante = $id_estudiante
+)
 ";
 $sqlEstudiante = "
     SELECT e.*, c.nombre_carrera
@@ -11,13 +20,14 @@ $sqlEstudiante = "
     WHERE e.id_usuario = 3
 ";
 
-$resEstudiante = mysqli_query($conexion,$sqlEstudiante);
+$resEstudiante = mysqli_query($conexion, $sqlEstudiante);
 $estudiante = mysqli_fetch_assoc($resEstudiante);
-
 $resultado = mysqli_query($conexion, $sql);
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,8 +35,11 @@ $resultado = mysqli_query($conexion, $sql);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../../assets/css/base.css">
-        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
 
     <?php include('sidebar.php'); ?>
@@ -58,7 +71,8 @@ $resultado = mysqli_query($conexion, $sql);
                             <div class="progress">
                                 <div class="progress-bar bg-success" style="width: 100%"></div>
                             </div>
-                            <small class="text-success mt-1 d-inline-block">Completado <i class="bi bi-check-circle"></i></small>
+                            <small class="text-success mt-1 d-inline-block">Completado <i
+                                    class="bi bi-check-circle"></i></small>
                         </div>
                         <div class="col-md-6">
                             <label class="small fw-bold text-secondary mb-2">Validación de Empresa</label>
@@ -76,7 +90,7 @@ $resultado = mysqli_query($conexion, $sql);
             <div class="col-12">
                 <div class="card card-custom bg-white">
                     <div class="card-header bg-white py-3 border-0">
-                        <h5 class="fw-bold mb-0">Ofertas Disponibles</h5>
+                        <h5 class="fw-bold mb-0">Ofertas Para Practica</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -92,51 +106,53 @@ $resultado = mysqli_query($conexion, $sql);
                                 </thead>
                                 <tbody>
 
-<?php while($oferta = mysqli_fetch_assoc($resultado)){ ?>
+                                    <?php while ($oferta = mysqli_fetch_assoc($resultado)) { ?>
 
-<tr>
+                                        <tr>
 
-    <td class="ps-4">
-        <div class="fw-bold">
-            <?php echo $oferta['titulo']; ?>
-        </div>
-        <small class="text-muted">
-            Oferta disponible
-        </small>
-    </td>
+                                            <td class="ps-4">
+                                                <div class="fw-bold">
+                                                    <?php echo $oferta['titulo']; ?>
+                                                </div>
+                                                <small class="text-muted">
+                                                    <?php
+                                                    if ($oferta['estado_oferta'] == 'activa') {
+                                                        echo "Oferta disponible";
+                                                    } else {
+                                                        echo "Oferta cerrada";
+                                                    }
+                                                    ?>
+                                                </small>
+                                            </td>
 
-    <td>
-        <span class="badge bg-light text-dark">
-            <?php echo $oferta['duracion_meses']; ?> meses
-        </span>
-    </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    <?php echo $oferta['duracion_meses']; ?> meses
+                                                </span>
+                                            </td>
 
-    <td class="text-success fw-bold">
-        <?php echo $oferta['cupos']; ?> cupos
-    </td>
+                                            <td class="fw-bold <?php echo ($oferta['cupos'] > 0) ? 'text-success' : 'text-danger'; ?>">
+                                                <?php echo $oferta['cupos']; ?> cupos
+                                            </td>
 
-    <td>
-        <span class="status-badge bg-success text-white">
-            Activa
-        </span>
-    </td>
-    
-    <td class="pe-4 text-end">
-        
-        <a href="detalle_oferta.php?id=<?php echo $oferta['id_oferta']; ?>" class="btn btn-sm btn-outline-primary">
-        Ver Detalle
-        </a>
-    </td>
+                                            <td>
+                                                <?php if ($oferta['estado_oferta'] == 'activa') { ?>
+                                                    <span class="badge bg-success">Activa</span>
+                                                <?php } else { ?>
+                                                    <span class="badge bg-danger">Cerrada</span>
+                                                <?php } ?>
 
-</tr>
+                                            </td>
 
-<?php } ?>
-
-</tbody>
+                                            <td class="pe-4 text-end">
+                                                <a href="detalle_oferta.php?id=<?php echo $oferta['id_oferta']; ?>" class="btn btn-sm btn-outline-primary">Ver Detalle</a>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                </tbody>
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -144,5 +160,5 @@ $resultado = mysqli_query($conexion, $sql);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
-                                    
