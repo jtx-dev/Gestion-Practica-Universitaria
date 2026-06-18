@@ -1,6 +1,21 @@
 <?php
 include('../../conexion.php');
-$idPractica = 1;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Redirigir si no es estudiante
+if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'estudiante') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
+
+$id_estudiante = $_SESSION['id_usuario'];
+
+// Obtener la práctica activa del estudiante
+$resPractica = mysqli_query($conexion, "SELECT id_practica FROM practica WHERE id_estudiante = $id_estudiante LIMIT 1");
+$practica = mysqli_fetch_assoc($resPractica);
+$idPractica = $practica['id_practica'] ?? 0;
 
 if (isset($_POST['guardar_bitacora'])) {
 

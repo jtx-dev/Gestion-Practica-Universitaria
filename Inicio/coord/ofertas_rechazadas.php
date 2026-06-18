@@ -1,15 +1,26 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE) {
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // Redirigir si no es coordinador
-if (!isset($_SESSION['nombre_rol']) || $_SESSION['nombre_rol'] !== 'Coordinador') {
+if (!isset($_SESSION['nombre_rol']) || strtolower($_SESSION['nombre_rol']) !== 'coordinador') {
     header('Location: ../iniciar_sesion.php');
     exit;
 }
 
 include('../../conexion.php');
+
+/* MANEJAR REVERSIÓN A PENDIENTE */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'revertir') {
+    $id_revertir = (int)$_POST['id_oferta'];
+    $sql_revertir = "UPDATE oferta_practica SET estado_oferta = 'pendiente_aprobacion' WHERE id_oferta = ?";
+    $stmt_rev = mysqli_prepare($conexion, $sql_revertir);
+    mysqli_stmt_bind_param($stmt_rev, "i", $id_revertir);
+    mysqli_stmt_execute($stmt_rev);
+    mysqli_stmt_close($stmt_rev);
+    $mensaje = "Oferta devuelta a estado pendiente de revisión.";
+}
 
 /** @var mysqli $conexion */
 $consulta = "SELECT
@@ -101,25 +112,45 @@ $resultado = mysqli_query($conexion, $consulta);
 
         <div class="card card-custom p-4 bg-white">
 
-            <h4 class="fw-bold mb-4">Listado de Ofertas Rechazadas</h4>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0">Listado de Ofertas Rechazadas</h4>
+            </div>
+
+            <?php if (isset($mensaje)) { ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i><?php echo $mensaje; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php } ?>
 
             <?php if (mysqli_num_rows($resultado) > 0) { ?>
 
                 <?php while ($fila = mysqli_fetch_assoc($resultado)) { ?>
 
-                    <div class="offer-card p-4 mb-3">
+                    <div class="offer-card p-4 mb-3 border rounded shadow-sm bg-white">
 
-                        <h5 class="fw-bold mb-1">
-                            <?php echo $fila['titulo']; ?>
-                        </h5>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold text-danger mb-0">
+                                <?php echo $fila['titulo']; ?>
+                            </h5>
 
-                        <div class="mb-2">
-                            <span class="badge bg-primary">
+                            <!-- Botón para revertir -->
+                            <form method="POST" class="m-0" onsubmit="return confirm('¿Estás seguro de que deseas enviar esta oferta de vuelta a revisión?');">
+                                <input type="hidden" name="accion" value="revertir">
+                                <input type="hidden" name="id_oferta" value="<?php echo $fila['id_oferta']; ?>">
+                                <button type="submit" class="btn btn-warning btn-sm fw-bold shadow-sm d-flex align-items-center gap-2">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Deshacer Rechazo
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="badge bg-secondary me-1">
                                 <?php echo $fila['nombre_carrera']; ?>
                             </span>
 
                             <span class="badge bg-danger">
-                                Rechazada
+                                <i class="bi bi-x-circle-fill me-1"></i>Rechazada
                             </span>
                         </div>
 

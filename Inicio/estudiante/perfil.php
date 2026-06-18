@@ -1,20 +1,51 @@
 <?php
 include('../../conexion.php');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-$idUsuario = 3;
+// Redirigir si no es estudiante
+if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'estudiante') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
+
+$idUsuario = $_SESSION['id_usuario'];
 
 if (isset($_POST['guardar'])) {
 
     $habilidades = $_POST['habilidades'];
 
-    mysqli_query($conexion, "
-        UPDATE estudiante
-        SET habilidades = '$habilidades'
-        WHERE id_usuario = $idUsuario
-    ");
+    mysqli_begin_transaction($conexion);
+    try {
+        // Actualizar el campo de texto (fallback)
+        mysqli_query($conexion, "
+            UPDATE estudiante
+            SET habilidades = '$habilidades'
+            WHERE id_usuario = $idUsuario        
+        ");
 
-    $mensaje = "Perfil actualizado correctamente";
+        // Limpiar competencias anteriores
+        mysqli_query($conexion, "DELETE FROM estudiante_competencias WHERE id_estudiante = $idUsuario");
+
+        // Guardar nuevas competencias por ID
+        if (!empty($_POST['competencias_ids'])) {
+            $ids = explode(',', $_POST['competencias_ids']);
+            foreach ($ids as $id_comp) {
+                $id_comp = (int)$id_comp;
+                if ($id_comp > 0) {
+                    mysqli_query($conexion, "INSERT INTO estudiante_competencias (id_estudiante, id_competencia) VALUES ($idUsuario, $id_comp)");
+                }
+            }
+        }
+        mysqli_commit($conexion);
+        $mensaje = "Habilidades y perfil actualizados correctamente";
+    } catch (Exception $e) {
+        mysqli_rollback($conexion);
+        $mensaje = "Error al actualizar habilidades";
+    }
 }
+
 
 if (isset($_POST['reemplazar_cv']) && !empty($_FILES['cv']['name'])) {
 
@@ -160,14 +191,60 @@ $estudiante = mysqli_fetch_assoc($resultado);
 
                         </div>
                         <form method="POST">
-                            <div class="mb-3">
+                            <div class="mb-4">
+                                <label class="fw-bold mb-3"><i class="bi bi-stars text-primary me-2"></i>Mis Habilidades Clave (Matching Inteligente)</label>
+                                <p class="text-muted small">Selecciona las etiquetas que mejor describen tus conocimientos técnicos y blandos.</p>
+                                
+                                <div class="d-flex flex-wrap gap-2 p-3 border rounded bg-white shadow-sm mb-3" id="contenedor-habilidades" style="min-height: 50px;">
+                                    <!-- Se cargan dinámicamente vía AJAX -->
+                                </div>
 
-                                <label class="fw-bold mb-2">Habilidades</label>
-                                <textarea name="habilidades" class="form-control" rows="5"><?php echo $estudiante['habilidades']; ?></textarea>
+                                <input type="hidden" name="competencias_ids" id="competencias_ids">
+                                <input type="hidden" name="habilidades" id="habilidades_texto">
                             </div>
 
-                            <button type="submit" name="guardar" class="btn btn-primary">Guardar Cambios</button>
+                            <button type="submit" name="guardar" class="btn btn-primary px-4 fw-bold shadow-sm">Guardar Cambios y Habilidades</button>
                         </form>
+
+                        <script>
+                        document.addEventListener('DOMContentLoaded', async function() {
+                            const carrera = "<?php echo $estudiante['nombre_carrera']; ?>";
+                            const idEstudiante = "<?php echo $idUsuario; ?>";
+                            const contenedor = document.getElementById('contenedor-habilidades');
+                            
+                            try {
+                                const response = await fetch(`../api_competencias.php?carrera=${encodeURIComponent(carrera)}&id_estudiante=${idEstudiante}`);
+                                const competencias = await response.json();
+
+                                if (competencias.length > 0) {
+                                    contenedor.innerHTML = '';
+                                    competencias.forEach(comp => {
+                                        const checked = comp.marcada ? 'checked' : '';
+                                        contenedor.innerHTML += `
+                                            <div>
+                                                <input type="checkbox" class="btn-check" id="hab_${comp.id}" value="${comp.id}" data-nombre="${comp.nombre}" ${checked} onchange="actualizarHabilidades()">
+                                                <label class="btn btn-outline-primary btn-sm rounded-pill" for="hab_${comp.id}">+ ${comp.nombre}</label>
+                                            </div>
+                                        `;
+                                    });
+                                    actualizarHabilidades(); // Inicializar campos ocultos
+                                } else {
+                                    contenedor.innerHTML = '<p class="text-muted small">No hay etiquetas predefinidas para tu carrera aún. Tu coordinador debe cargarlas.</p>';
+                                }
+                            } catch (error) {
+                                console.error('Error al cargar habilidades:', error);
+                            }
+                        });
+
+                        function actualizarHabilidades() {
+                            const checks = document.querySelectorAll('#contenedor-habilidades input:checked');
+                            const ids = Array.from(checks).map(c => c.value);
+                            const nombres = Array.from(checks).map(c => c.getAttribute('data-nombre'));
+                            
+                            document.getElementById('competencias_ids').value = ids.join(',');
+                            document.getElementById('habilidades_texto').value = nombres.join(', ');
+                        }
+                        </script>
 
                     </div>
                 </div>

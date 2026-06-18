@@ -1,10 +1,10 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE) {
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // Redirigir si no es coordinador
-if (!isset($_SESSION['nombre_rol']) || $_SESSION['nombre_rol'] !== 'Coordinador') {
+if (!isset($_SESSION['nombre_rol']) || strtolower($_SESSION['nombre_rol']) !== 'coordinador') {
     header('Location: ../iniciar_sesion.php');
     exit;
 }

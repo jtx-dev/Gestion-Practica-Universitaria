@@ -1,5 +1,17 @@
 <?php
 include('../../conexion.php');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Redirigir si no es estudiante
+if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'estudiante') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
+
+$id_estudiante = $_SESSION['id_usuario'];
+
 //Para cancelar postulaicon y actualice en la tabla de ofertas de practica
 if (isset($_GET['cancelar'])) {
 
@@ -42,7 +54,7 @@ SELECT
 FROM postulacion p
 INNER JOIN oferta_practica o
 ON p.id_oferta = o.id_oferta
-WHERE p.id_estudiante = 3
+WHERE p.id_estudiante = $id_estudiante
 
 ";
 

@@ -74,17 +74,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Resolver ID de carrera por nombre
         $id_carrera = 0;
-        if ($nombre_carrera_input !== '') {
-            $BusquedaCarrera = mysqli_prepare($conexion, "SELECT id_carrera FROM carrera WHERE nombre_carrera = ?");
-            if ($BusquedaCarrera) {
-                mysqli_stmt_bind_param($BusquedaCarrera, "s", $nombre_carrera_input);
-                mysqli_stmt_execute($BusquedaCarrera);
-                $resC = mysqli_stmt_get_result($BusquedaCarrera);
-                if ($rowC = mysqli_fetch_assoc($resC)) {
-                    $id_carrera = (int)$rowC['id_carrera'];
-                }
-                mysqli_stmt_close($BusquedaCarrera);
+        // Buscar id_carrera e id_institucion por nombre
+        $id_institucion_carrera = 0;
+        $BusquedaCarrera = mysqli_prepare($conexion, "SELECT id_carrera, id_institucion FROM carrera WHERE nombre_carrera = ?");
+        if ($BusquedaCarrera) {
+            mysqli_stmt_bind_param($BusquedaCarrera, "s", $nombre_carrera_input);
+            mysqli_stmt_execute($BusquedaCarrera);
+            $resC = mysqli_stmt_get_result($BusquedaCarrera);
+            if ($rowC = mysqli_fetch_assoc($resC)) {
+                $id_carrera = (int)$rowC['id_carrera'];
+                $id_institucion_carrera = (int)$rowC['id_institucion'];
             }
+            mysqli_stmt_close($BusquedaCarrera);
+        }
+
 
             // Manejo de casos demo si no hay base de datos poblada
             if ($id_carrera === 0) {
@@ -146,18 +149,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $userRow = mysqli_fetch_assoc($resultCheck);
             mysqli_stmt_close($ValidarUsuario);
 
+            if ($id_institucion_carrera <= 0) {
+                $resInst = mysqli_query($conexion, "SELECT id_institucion FROM institucion LIMIT 1");
+                $instData = mysqli_fetch_assoc($resInst);
+                $id_institucion_carrera = $instData['id_institucion'] ?? 0;
+            }
+
             if ($userRow) {
                 $idUsuario = $userRow['id_usuario'];
             } else {
                 // Buscar rol de Empresa o usar uno por defecto
                 $resRol = mysqli_query($conexion, "SELECT id_rol FROM rol WHERE nombre_rol LIKE '%Empresa%' LIMIT 1");
                 $rol = mysqli_fetch_assoc($resRol);
-                $id_rol_empresa = $rol ? $rol['id_rol'] : 2; 
+                $id_rol_empresa = $rol ? $rol['id_rol'] : 2;
 
                 $hash = password_hash($rut_empresa, PASSWORD_DEFAULT);
-                $RegistroUsuario = mysqli_prepare($conexion, "INSERT INTO usuario (id_rol, rut, correo, contrasena_hash, estado_cuenta) VALUES (?, ?, ?, ?, 'activa')");
+                $RegistroUsuario = mysqli_prepare($conexion, "INSERT INTO usuario (id_rol, id_institucion, rut, correo, contrasena_hash, estado_cuenta) VALUES (?, ?, ?, ?, ?, 'activa')");
                 if (!$RegistroUsuario) throw new Exception("Error al preparar creación de usuario.");
-                mysqli_stmt_bind_param($RegistroUsuario, "isss", $id_rol_empresa, $rut_empresa, $correo, $hash);
+                mysqli_stmt_bind_param($RegistroUsuario, "iisss", $id_rol_empresa, $id_institucion_carrera, $rut_empresa, $correo, $hash);
                 if (!mysqli_stmt_execute($RegistroUsuario)) throw new Exception("Error al crear usuario.");
                 $idUsuario = mysqli_insert_id($conexion);
                 mysqli_stmt_close($RegistroUsuario);
@@ -171,12 +180,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Insertar oferta de práctica
             $RegistroOferta = mysqli_prepare($conexion, "INSERT INTO oferta_practica (id_carrera, id_empresa, titulo, descripcion, requisitos, cupos, duracion_meses, estado_oferta) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente_aprobacion')");
-            if (!$RegistroOferta) throw new Exception("Error al preparar envío de oferta (posible falta de columnas en la BD).");
+            if (!$RegistroOferta) throw new Exception("Error al preparar envío de oferta.");
             mysqli_stmt_bind_param($RegistroOferta, "iisssii", $id_carrera, $idUsuario, $titulo, $descripcion, $requisitos, $cupos, $duracion);
             if (!mysqli_stmt_execute($RegistroOferta)) throw new Exception("Error al enviar la oferta.");
+            $idOferta = mysqli_insert_id($conexion);
             mysqli_stmt_close($RegistroOferta);
 
+            // Guardar competencias seleccionadas
+            if (!empty($_POST['competencias_ids'])) {
+                $ids = explode(',', $_POST['competencias_ids']);
+                foreach ($ids as $id_comp) {
+                    $id_comp = (int)$id_comp;
+                    if ($id_comp > 0) {
+                        mysqli_query($conexion, "INSERT INTO oferta_competencias (id_oferta, id_competencia) VALUES ($idOferta, $id_comp)");
+                    }
+                }
+            }
+
             mysqli_commit($conexion);
+
             $mensaje = '¡Oferta enviada con éxito! Será revisada por la coordinación en un plazo de 48 hrs.';
             $tipoMensaje = 'success';
 
@@ -192,7 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 } // Fin del else de Rate Limiting
-}
 
 // Obtener carreras para el select
 $carreras = [];
@@ -341,30 +362,34 @@ if ($resCarreras) {
                         </div>
                         <div class="col-md-12">
                             <label class="form-label">Título de la Práctica</label>
-                            <input type="text" name="titulo" class="form-control shadow-sm" placeholder="Ej: Practicante de Desarrollo Web Laravel" value="<?= htmlspecialchars($titulo ?? '') ?>" required>
+                            <input type="text" name="titulo" class="form-control shadow-sm" placeholder="Ej: Practicante de Enfermería / Desarrollador Web" value="<?= htmlspecialchars($titulo ?? '') ?>" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Descripción de Actividades</label>
-                            <textarea name="descripcion" class="form-control shadow-sm" rows="4" placeholder="Detalle las tareas que realizará el alumno..." required><?= htmlspecialchars($descripcion ?? '') ?></textarea>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Requisitos de la Práctica</label>
-                            <textarea name="requisitos" class="form-control shadow-sm" rows="3" placeholder="Ej: Conocimientos en PHP, SQL, disponibilidad inmediata..." required><?= htmlspecialchars($requisitos ?? '') ?></textarea>
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label">Carrera Solicitada</label>
-                            <input type="text" name="nombre_carrera" list="carrerasList" class="form-control shadow-sm" placeholder="Escriba para buscar carrera..." value="<?= htmlspecialchars($nombre_carrera_input ?? '') ?>" required>
+                            <input type="text" name="nombre_carrera" id="nombre_carrera" list="carrerasList" class="form-control shadow-sm" placeholder="Escriba para buscar carrera..." value="<?= htmlspecialchars($nombre_carrera_input ?? '') ?>" onchange="cargarCompetencias()" required>
                             <datalist id="carrerasList">
                                 <?php if (count($carreras) > 0): ?>
                                     <?php foreach ($carreras as $carrera): ?>
                                         <option value="<?= htmlspecialchars($carrera['nombre_carrera']) ?>">
                                     <?php endforeach; ?>
-                                <?php else: ?>
-                                    <option value="Ingeniería Civil Informática">
-                                    <option value="Ingeniería Comercial">
-                                    <option value="Psicología">
                                 <?php endif; ?>
                             </datalist>
+                        </div>
+
+                        <!-- Bloque de Competencias Estilo "Chips" -->
+                        <div class="col-md-12" id="bloque-competencias" style="display: none;">
+                            <label class="form-label fw-bold text-primary"><i class="bi bi-stars me-2"></i>Habilidades Clave (Matching Inteligente)</label>
+                            <p class="text-muted small mb-2">Selecciona las habilidades técnicas que buscas. Esto activará el algoritmo de matching con los alumnos.</p>
+                            <div class="d-flex flex-wrap gap-2 p-3 border rounded bg-white shadow-sm" id="contenedor-competencias" style="min-height: 50px;">
+                                <!-- Se llena vía AJAX -->
+                            </div>
+                            <input type="hidden" name="competencias_ids" id="competencias_ids">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Descripción de Actividades y Otros Requisitos</label>
+                            <textarea name="descripcion" class="form-control shadow-sm" rows="4" placeholder="Detalle las tareas y cualquier otro requisito adicional (idiomas, disponibilidad, etc.)..." required><?= htmlspecialchars($descripcion ?? '') ?></textarea>
+                            <input type="hidden" name="requisitos" value="Ver etiquetas de competencias"> <!-- Mantenemos compatibilidad con la DB antigua -->
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Correo de Contacto (RRHH)</label>
@@ -403,5 +428,46 @@ if ($resCarreras) {
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    async function cargarCompetencias() {
+        const carrera = document.getElementById('nombre_carrera').value;
+        const bloque = document.getElementById('bloque-competencias');
+        const contenedor = document.getElementById('contenedor-competencias');
+        
+        if (!carrera) {
+            bloque.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`api_competencias.php?carrera=${encodeURIComponent(carrera)}`);
+            const competencias = await response.json();
+
+            if (competencias.length > 0) {
+                bloque.style.display = 'block';
+                contenedor.innerHTML = '';
+                competencias.forEach(comp => {
+                    contenedor.innerHTML += `
+                        <div>
+                            <input type="checkbox" class="btn-check" id="btn_${comp.id}" value="${comp.id}" onchange="actualizarSeleccion()">
+                            <label class="btn btn-outline-primary btn-sm rounded-pill" for="btn_${comp.id}">+ ${comp.nombre}</label>
+                        </div>
+                    `;
+                });
+            } else {
+                bloque.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error al cargar competencias:', error);
+        }
+    }
+
+    function actualizarSeleccion() {
+        const checks = document.querySelectorAll('#contenedor-competencias input:checked');
+        const seleccion = Array.from(checks).map(c => c.value);
+        document.getElementById('competencias_ids').value = seleccion.join(',');
+    }
+    </script>
 </body>
 </html>

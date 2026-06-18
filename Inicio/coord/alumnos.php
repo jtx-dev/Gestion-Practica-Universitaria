@@ -1,15 +1,16 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE) {
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // Redirigir si no es coordinador
-if (!isset($_SESSION['nombre_rol']) || $_SESSION['nombre_rol'] !== 'Coordinador') {
+if (!isset($_SESSION['nombre_rol']) || strtolower($_SESSION['nombre_rol']) !== 'coordinador') {
     header('Location: ../iniciar_sesion.php');
     exit;
 }
 
 include('../../conexion.php');
+include('../../helpers.php');
 /** @var mysqli $conexion */
 
 $id_coordinador = $_SESSION['id_usuario'];
@@ -24,7 +25,7 @@ $coord_data = mysqli_fetch_assoc($res_coord);
 $id_carrera = $coord_data['id_carrera'] ?? 0;
 
 // Consulta de alumnos de la carrera
-$sql_alumnos = "SELECT e.id_usuario, e.nombre, e.apellido, e.nivel_curricular, u.correo, u.estado_cuenta,
+$sql_alumnos = "SELECT e.id_usuario, e.nombre, e.apellido, e.nivel_curricular, e.habilidades, u.correo, u.estado_cuenta,
                        p.estado_practica
                 FROM estudiante e
                 JOIN usuario u ON e.id_usuario = u.id_usuario
@@ -36,6 +37,20 @@ $stmt_alumnos = mysqli_prepare($conexion, $sql_alumnos);
 mysqli_stmt_bind_param($stmt_alumnos, "i", $id_carrera);
 mysqli_stmt_execute($stmt_alumnos);
 $resultado = mysqli_stmt_get_result($stmt_alumnos);
+
+// Pre-cargar ofertas activas para el matching
+$sql_ofertas = "SELECT id_oferta, titulo, requisitos, empresa.nombre_empresa 
+                FROM oferta_practica 
+                JOIN empresa ON oferta_practica.id_empresa = empresa.id_usuario
+                WHERE oferta_practica.id_carrera = ? AND estado_oferta = 'activa'";
+$stmt_o = mysqli_prepare($conexion, $sql_ofertas);
+mysqli_stmt_bind_param($stmt_o, "i", $id_carrera);
+mysqli_stmt_execute($stmt_o);
+$res_ofertas = mysqli_stmt_get_result($stmt_o);
+$ofertas_base = [];
+while ($o = mysqli_fetch_assoc($res_ofertas)) {
+    $ofertas_base[] = $o;
+}
 
 ?>
 <!DOCTYPE html>
@@ -117,8 +132,22 @@ $resultado = mysqli_stmt_get_result($stmt_alumnos);
                                         </span>
                                     </td>
                                     <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-success" 
+                                                title="Ofertas sugeridas" 
+                                                onclick='verSugerencias(<?php echo json_encode([
+                                                    "nombre" => $alumno["nombre"] . " " . $alumno["apellido"],
+                                                    "habilidades" => $alumno["habilidades"] ?: "Sin registrar",
+                                                    "sugerencias" => array_map(function($o) use ($alumno, $conexion) {
+                                                        return [
+                                                            "titulo" => $o["titulo"],
+                                                            "empresa" => $o["nombre_empresa"],
+                                                            "afinidad" => calcular_afinidad_tags($conexion, $alumno["id_usuario"], $o["id_oferta"])
+                                                        ];
+                                                    }, $ofertas_base)
+                                                ]); ?>)'>
+                                            <i class="bi bi-stars"></i>
+                                        </button>
                                         <button class="btn btn-sm btn-outline-primary" title="Ver Perfil"><i class="bi bi-eye"></i></button>
-                                        <button class="btn btn-sm btn-outline-secondary" title="Enviar Mensaje"><i class="bi bi-envelope"></i></button>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -133,6 +162,51 @@ $resultado = mysqli_stmt_get_result($stmt_alumnos);
         </div>
     </main>
 
+    <!-- Modal de Sugerencias -->
+    <div class="modal fade" id="modalSugerencias" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-stars text-success me-2"></i>Ofertas Recomendadas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalSugerenciasCuerpo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <script>
+    function verSugerencias(data) {
+        let cuerpo = `<h6>Alumno: <strong>${data.nombre}</strong></h6>`;
+        cuerpo += `<p class="small text-muted">Habilidades: ${data.habilidades}</p><hr>`;
+
+        let sugerencias = data.sugerencias
+            .filter(s => s.afinidad > 0)
+            .sort((a, b) => b.afinidad - a.afinidad);
+
+        if (sugerencias.length > 0) {
+            sugerencias.forEach(s => {
+                let color = s.afinidad >= 70 ? 'success' : (s.afinidad >= 40 ? 'warning text-dark' : 'danger');
+                cuerpo += `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                        <div>
+                            <div class="fw-bold">${s.titulo}</div>
+                            <div class="small text-muted">${s.empresa}</div>
+                        </div>
+                        <span class="badge bg-${color}">${s.afinidad}%</span>
+                    </div>
+                `;
+            });
+        } else {
+            cuerpo += `<div class="alert alert-warning small">No se encontraron ofertas compatibles con las habilidades de este alumno.</div>`;
+        }
+
+        document.getElementById('modalSugerenciasCuerpo').innerHTML = cuerpo;
+        new bootstrap.Modal(document.getElementById('modalSugerencias')).show();
+    }
+    </script>
+    </body>
+    </html>

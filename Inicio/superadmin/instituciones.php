@@ -1,4 +1,11 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['nombre_rol']) || $_SESSION['nombre_rol'] !== 'Super Administrador') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
 include('../../conexion.php');
 
 $mensaje = '';

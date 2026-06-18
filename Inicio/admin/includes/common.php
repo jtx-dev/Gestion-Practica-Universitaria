@@ -174,6 +174,7 @@ function admin_layout_header(string $titulo, string $subtitulo = ''): void
             <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'usuarios.php' ? 'active' : '' ?>" href="usuarios.php"><i class="bi bi-people me-2"></i> Usuarios</a>
             <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'roles.php' ? 'active' : '' ?>" href="roles.php"><i class="bi bi-card-checklist me-2"></i> Roles</a>
             <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'carreras.php' ? 'active' : '' ?>" href="carreras.php"><i class="bi bi-backpack3 me-2"></i> Carreras</a>
+            <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'competencias.php' ? 'active' : '' ?>" href="competencias.php"><i class="bi bi-tags me-2"></i> Competencias</a>
             <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'asignaciones.php' ? 'active' : '' ?>" href="asignaciones.php"><i class="bi bi-diagram-3 me-2"></i> Asignaciones</a>
             <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'logs.php' ? 'active' : '' ?>" href="logs.php"><i class="bi bi-journal-text me-2"></i> Auditoría</a>
             <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'configuracion.php' ? 'active' : '' ?>" href="configuracion.php"><i class="bi bi-gear me-2"></i> Configuracion</a>

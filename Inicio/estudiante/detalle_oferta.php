@@ -1,19 +1,34 @@
 <?php
 include('../../conexion.php');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Redirigir si no es estudiante
+if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'estudiante') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
 
 $id_oferta = $_GET['id'];
-$id_estudiante = 3;
+$id_estudiante = $_SESSION['id_usuario'];
 
 $sql = "
 SELECT o.*, e.nombre_empresa
 FROM oferta_practica o
 INNER JOIN empresa e
 ON o.id_empresa = e.id_usuario
-WHERE o.id_oferta = $id_oferta
+WHERE o.id_oferta = $id_oferta 
+AND o.estado_oferta = 'activa'
 ";
 
 $resultado = mysqli_query($conexion, $sql);
 $oferta = mysqli_fetch_assoc($resultado);
+
+if (!$oferta) {
+    header('Location: inicio.php');
+    exit;
+}
 $sqlExiste = "
 SELECT *
 FROM postulacion

@@ -1,14 +1,24 @@
 <?php
 include('../../conexion.php');
-//Para ocultar ofertas ya postuladas
-$id_estudiante = 3;
+include('../../helpers.php');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Redirigir si no es estudiante
+if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'estudiante') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
+
+$id_estudiante = $_SESSION['id_usuario'];
 
 $sqlEstudiante = "
     SELECT e.*, c.nombre_carrera
     FROM estudiante e
     INNER JOIN carrera c
     ON e.id_carrera = c.id_carrera
-    WHERE e.id_usuario = 3
+    WHERE e.id_usuario = $id_estudiante
 ";
 
 $resEstudiante = mysqli_query($conexion, $sqlEstudiante);
@@ -20,6 +30,7 @@ FROM oferta_practica o
 INNER JOIN empresa e
 ON o.id_empresa = e.id_usuario
 WHERE o.id_carrera = {$estudiante['id_carrera']}
+AND o.estado_oferta = 'activa'
 AND o.id_oferta NOT IN
 (
     SELECT id_oferta
@@ -29,6 +40,22 @@ AND o.id_oferta NOT IN
 ";
 
 $resultado = mysqli_query($conexion, $sql);
+
+// OBTENER NOTIFICACIONES (Recomendaciones)
+$sql_notif = "SELECT id_notificacion, titulo, mensaje FROM notificacion WHERE id_usuario = $id_estudiante AND leida = 0 ORDER BY fecha_envio DESC";
+$res_notif = mysqli_query($conexion, $sql_notif);
+$notificaciones = [];
+if ($res_notif) {
+    while($n = mysqli_fetch_assoc($res_notif)) {
+        $notificaciones[] = $n;
+    }
+}
+
+// MARCAR COMO LEÍDAS (opcional, o podemos dejar que las cierre manualmente. Vamos a marcarlas como leídas para limpiar la vista la próxima vez, o añadir un botón).
+// Para ser más amigable, solo las mostraremos y al hacer un POST las cerraremos, pero por simplicidad de UI, marcaremos todas como leídas después de cargarlas:
+if (!empty($notificaciones)) {
+    mysqli_query($conexion, "UPDATE notificacion SET leida = 1 WHERE id_usuario = $id_estudiante");
+}
 
 ?>
 
@@ -93,6 +120,21 @@ $resultado = mysqli_query($conexion, $sql);
             </div>
         </div>
 
+        <?php if (!empty($notificaciones)): ?>
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bell-fill me-2"></i>Nuevas Recomendaciones de tu Coordinador</h5>
+                <?php foreach ($notificaciones as $notif): ?>
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4" role="alert">
+                        <h6 class="alert-heading fw-bold mb-1"><?= htmlspecialchars($notif['titulo']) ?></h6>
+                        <p class="mb-0 small"><?= htmlspecialchars($notif['mensaje']) ?></p>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom bg-white">
@@ -105,6 +147,7 @@ $resultado = mysqli_query($conexion, $sql);
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-4">Empresa / Oferta</th>
+                                        <th>Afinidad</th>
                                         <th>Duración</th>
                                         <th>Cupos</th>
                                         <th>Estado</th>
@@ -113,7 +156,21 @@ $resultado = mysqli_query($conexion, $sql);
                                 </thead>
                                 <tbody>
 
-                                    <?php while ($oferta = mysqli_fetch_assoc($resultado)) { ?>
+                                    <?php 
+                                    $ofertas_lista = [];
+                                    while ($o = mysqli_fetch_assoc($resultado)) {
+                                        $o['afinidad'] = calcular_afinidad_tags($conexion, $id_estudiante, $o['id_oferta']);
+                                        $ofertas_lista[] = $o;
+                                    }
+
+                                    // Opcional: ordenar por afinidad
+                                    usort($ofertas_lista, function($a, $b) {
+                                        return $b['afinidad'] <=> $a['afinidad'];
+                                    });
+
+                                    foreach ($ofertas_lista as $oferta) { 
+                                        $color_afinidad = $oferta['afinidad'] >= 70 ? 'success' : ($oferta['afinidad'] >= 40 ? 'warning text-dark' : 'secondary');
+                                    ?>
 
                                         <tr>
 
@@ -125,16 +182,12 @@ $resultado = mysqli_query($conexion, $sql);
                                                 <small class="text-muted d-block">
                                                     Empresa: <?php echo $oferta['nombre_empresa']; ?>
                                                 </small>
-                                            
-                                                <small class="text-muted">
-                                                    <?php
-                                                    if ($oferta['estado_oferta'] == 'activa') {
-                                                        echo "Oferta disponible";
-                                                    } else {
-                                                        echo "Oferta cerrada";
-                                                    }
-                                                    ?>
-                                                </small>
+                                            </td>
+
+                                            <td>
+                                                <span class="badge bg-<?php echo $color_afinidad; ?> p-2">
+                                                    <?php echo $oferta['afinidad']; ?>%
+                                                </span>
                                             </td>
 
                                             <td>
