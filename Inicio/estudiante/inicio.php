@@ -3,9 +3,11 @@ include('../../conexion.php');
 //Para ocultar ofertas ya postuladas
 $id_estudiante = 3;
 $sql = "
-SELECT *
-FROM oferta_practica
-WHERE id_oferta NOT IN
+SELECT o.*, e.nombre_empresa
+FROM oferta_practica o
+INNER JOIN empresa e
+ON o.id_empresa = e.id_usuario
+WHERE o.id_oferta NOT IN
 (
     SELECT id_oferta
     FROM postulacion
@@ -114,6 +116,11 @@ $resultado = mysqli_query($conexion, $sql);
                                                 <div class="fw-bold">
                                                     <?php echo $oferta['titulo']; ?>
                                                 </div>
+                                            
+                                                <small class="text-muted d-block">
+                                                    Empresa: <?php echo $oferta['nombre_empresa']; ?>
+                                                </small>
+                                            
                                                 <small class="text-muted">
                                                     <?php
                                                     if ($oferta['estado_oferta'] == 'activa') {

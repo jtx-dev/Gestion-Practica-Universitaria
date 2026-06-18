@@ -5,9 +5,11 @@ $id_oferta = $_GET['id'];
 $id_estudiante = 3;
 
 $sql = "
-SELECT *
-FROM oferta_practica
-WHERE id_oferta = $id_oferta
+SELECT o.*, e.nombre_empresa
+FROM oferta_practica o
+INNER JOIN empresa e
+ON o.id_empresa = e.id_usuario
+WHERE o.id_oferta = $id_oferta
 ";
 
 $resultado = mysqli_query($conexion, $sql);
@@ -113,9 +115,12 @@ if (!$oferta) {
 
             <div class="card-body p-4">
 
-                <h2 class="mb-4">
-                    <?php echo $oferta['titulo']; ?>
-                </h2>
+                <h2 class="mb-2"><?php echo $oferta['titulo']; ?></h2>
+
+                <p class="text-muted mb-4">
+                    <i class="bi bi-building"></i>
+                    <?php echo $oferta['nombre_empresa']; ?>
+                </p>
 
                 <div class="row">
 
