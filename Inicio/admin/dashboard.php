@@ -5,7 +5,7 @@ include(__DIR__ . '/includes/common.php');
 $idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
 $filtroInstitucion = $idInstitucionActual > 0 ? (int) $idInstitucionActual : 0;
 $filtroUsuarios = $filtroInstitucion > 0
-    ? "u.id_institucion = {$filtroInstitucion} AND r.nombre_rol IN ('Estudiante', 'Coordinador', 'Directivo')"
+    ? "u.id_institucion = {$filtroInstitucion} AND LOWER(TRIM(r.nombre_rol)) IN ('estudiante', 'coordinador', 'directivo', 'director')"
     : "1 = 0";
 
 $totalUsuarios = admin_query_scalar($conexion, "SELECT COUNT(*)
@@ -31,17 +31,17 @@ $totalEstudiantes = admin_query_scalar($conexion, "SELECT COUNT(*)
 FROM usuario u
 INNER JOIN rol r ON r.id_rol = u.id_rol
 WHERE {$filtroUsuarios}
-  AND r.nombre_rol = 'Estudiante'");
+  AND LOWER(TRIM(r.nombre_rol)) = 'estudiante'");
 $totalCoordinadores = admin_query_scalar($conexion, "SELECT COUNT(*)
 FROM usuario u
 INNER JOIN rol r ON r.id_rol = u.id_rol
 WHERE {$filtroUsuarios}
-  AND r.nombre_rol = 'Coordinador'");
+  AND LOWER(TRIM(r.nombre_rol)) = 'coordinador'");
 $totalDirectivos = admin_query_scalar($conexion, "SELECT COUNT(*)
 FROM usuario u
 INNER JOIN rol r ON r.id_rol = u.id_rol
 WHERE {$filtroUsuarios}
-  AND r.nombre_rol = 'Directivo'");
+  AND LOWER(TRIM(r.nombre_rol)) IN ('directivo', 'director')");
 $practicasActivas = admin_query_scalar($conexion, "SELECT COUNT(*)
 FROM oferta_practica op
 INNER JOIN carrera c ON c.id_carrera = op.id_carrera

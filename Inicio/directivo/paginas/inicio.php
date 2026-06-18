@@ -1,54 +1,49 @@
 <?php
 require_once 'config_directivo/conexion.php';
 
-// Estadísticas rápidas para la carrera del directivo
+$joinAsignacion = directivo_join_asignacion($id_directivo);
 $stats = [];
 
-// Total estudiantes en práctica activa
-$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM practica p
+$r = mysqli_query($conexion, "SELECT COUNT(*) AS total
+    FROM practica p
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
-    WHERE e.id_carrera = $id_carrera
-    AND p.estado_practica NOT IN ('Finalizada','Cancelada')");
+    {$joinAsignacion}
+    WHERE p.estado_practica NOT IN ('finalizado', 'cancelada')");
+$stats['activos'] = (int) (mysqli_fetch_assoc($r)['total'] ?? 0);
 
-$stats['activos'] = mysqli_fetch_assoc($r)['total'];
-$fila = mysqli_fetch_assoc($r);
-
-echo "<pre>";
-print_r($fila);
-echo "</pre>";
-// Practicas finalizadas
-$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM practica p
+$r = mysqli_query($conexion, "SELECT COUNT(*) AS total
+    FROM practica p
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
-    WHERE e.id_carrera = $id_carrera AND p.estado_practica = 'Finalizada'");
+    {$joinAsignacion}
+    WHERE p.estado_practica = 'finalizado'");
+$stats['finalizadas'] = (int) (mysqli_fetch_assoc($r)['total'] ?? 0);
 
-$stats['finalizadas'] = mysqli_fetch_assoc($r)['total'];
-
-// Evaluaciones pendientes del directivo
-$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM practica p
+$r = mysqli_query($conexion, "SELECT COUNT(*) AS total
+    FROM practica p
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
-    WHERE p.id_directivo = $id_directivo
-    AND p.estado_practica = 'Informe Entregado'
-    AND p.nota_final IS NULL");
+    {$joinAsignacion}
+    WHERE p.estado_practica IN ('informe_entregado', 'en_curso')
+      AND p.nota_final IS NULL");
+$stats['pendientes_eval'] = (int) (mysqli_fetch_assoc($r)['total'] ?? 0);
 
-$stats['pendientes_eval'] = mysqli_fetch_assoc($r)['total'];
-
-// Promedio nota final
-$r = mysqli_query($conexion, "SELECT ROUND(AVG(p.nota_final),1) as promedio FROM practica p
+$r = mysqli_query($conexion, "SELECT ROUND(AVG(p.nota_final), 1) AS promedio
+    FROM practica p
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
-    WHERE e.id_carrera = $id_carrera AND p.nota_final IS NOT NULL");
-
+    {$joinAsignacion}
+    WHERE p.nota_final IS NOT NULL");
 $stats['promedio'] = mysqli_fetch_assoc($r)['promedio'] ?? '—';
-// Ultimas 5 prácticas con actividad reciente
-$recientes = mysqli_query($conexion,"
+
+$recientes = mysqli_query($conexion, "
     SELECT e.nombre, e.apellido, p.estado_practica, p.fecha_inicio, o.titulo
     FROM practica p
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
     JOIN oferta_practica o ON o.id_oferta = p.id_oferta
-    WHERE e.id_carrera = $id_carrera
+    {$joinAsignacion}
+    WHERE p.estado_practica NOT IN ('cancelada')
     ORDER BY p.fecha_inicio DESC
     LIMIT 5
 ");
-mysqli_close($conexion)
+mysqli_close($conexion);
 ?>
 
 <!-- Tarjetas de resumen -->
@@ -59,8 +54,8 @@ mysqli_close($conexion)
                 <i class="bi bi-person-check-fill" style="color:#1e40af;"></i>
             </div>
             <div>
-                <div class="stat-value"><?= $stats['activos'] ?></div>
-                <div class="stat-label">Estudiantes en práctica activa</div>
+                <div class="stat-value"><?= (int) $stats['activos'] ?></div>
+                <div class="stat-label">Prácticas activas</div>
             </div>
         </div>
     </div>
@@ -70,7 +65,7 @@ mysqli_close($conexion)
                 <i class="bi bi-patch-check-fill" style="color:#065f46;"></i>
             </div>
             <div>
-                <div class="stat-value"><?= $stats['finalizadas'] ?></div>
+                <div class="stat-value"><?= (int) $stats['finalizadas'] ?></div>
                 <div class="stat-label">Prácticas finalizadas</div>
             </div>
         </div>
@@ -81,7 +76,7 @@ mysqli_close($conexion)
                 <i class="bi bi-hourglass-split" style="color:#92400e;"></i>
             </div>
             <div>
-                <div class="stat-value"><?= $stats['pendientes_eval'] ?></div>
+                <div class="stat-value"><?= (int) $stats['pendientes_eval'] ?></div>
                 <div class="stat-label">Evaluaciones pendientes</div>
             </div>
         </div>
@@ -92,7 +87,7 @@ mysqli_close($conexion)
                 <i class="bi bi-star-fill" style="color:#5b21b6;"></i>
             </div>
             <div>
-                <div class="stat-value"><?= $stats['promedio'] ?></div>
+                <div class="stat-value"><?= htmlspecialchars((string) $stats['promedio']) ?></div>
                 <div class="stat-label">Promedio notas finales</div>
             </div>
         </div>
@@ -117,30 +112,24 @@ mysqli_close($conexion)
             </thead>
             <tbody>
             <?php if (mysqli_num_rows($recientes) === 0): ?>
-                <tr><td colspan="4" class="text-center text-muted py-4">
-                    <i class="bi bi-inbox fs-4 d-block mb-1"></i>
-                    No hay prácticas registradas para tu carrera.
-                </td></tr>
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+                        No hay prácticas registradas para tus asignaciones.
+                    </td>
+                </tr>
             <?php else: ?>
                 <?php while ($row = mysqli_fetch_assoc($recientes)): ?>
                 <tr>
                     <td><strong><?= htmlspecialchars($row['nombre'] . ' ' . $row['apellido']) ?></strong></td>
                     <td><?= htmlspecialchars($row['titulo']) ?></td>
-                    <td><?php
-                        $map = [
-                            'Asignado'          => 'badge-asignado',
-                            'En Curso'          => 'badge-en-curso',
-                            'Finalizada'        => 'badge-finalizada',
-                            'Evaluado'          => 'badge-evaluado',
-                            'Postulado'         => 'badge-postulado',
-                            'Cancelada'         => 'badge-cancelada',
-                            'Informe Entregado' => 'badge-postulado',
-                        ];
-                        $cls = $map[$row['estado_practica']] ?? 'badge-finalizada';
-                    ?>
-                    <span class="badge-estado <?= $cls ?>"><?= htmlspecialchars($row['estado_practica']) ?></span>
+                    <td>
+                        <?php $cls = directivo_clase_estado_practica((string) ($row['estado_practica'] ?? '')); ?>
+                        <span class="badge-estado <?= $cls ?>">
+                            <?= htmlspecialchars(directivo_etiqueta_estado_practica((string) ($row['estado_practica'] ?? ''))) ?>
+                        </span>
                     </td>
-                    <td><?= htmlspecialchars($row['fecha_inicio']) ?></td>
+                    <td><?= htmlspecialchars((string) ($row['fecha_inicio'] ?? '—')) ?></td>
                 </tr>
                 <?php endwhile; ?>
             <?php endif; ?>

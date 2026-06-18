@@ -9,7 +9,8 @@ if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['nombre_rol'])) {
     exit;
 }
 
-if (trim($_SESSION['nombre_rol']) !== 'Directivo') {
+$rolSesion = strtolower(trim((string) $_SESSION['nombre_rol']));
+if (!in_array($rolSesion, ['directivo', 'director'], true)) {
     header('Location: ../iniciar_sesion.php');
     exit;
 }
@@ -37,4 +38,50 @@ if (!$fila) {
 }
 
 $id_carrera = (int) $fila['id_carrera'];
+
+function directivo_join_asignacion(int $idDirectivo, string $aliasEstudiante = 'e'): string
+{
+    return "INNER JOIN asignacion a ON a.id_estudiante = {$aliasEstudiante}.id_usuario
+        AND a.id_directivo = " . (int) $idDirectivo . "
+        AND LOWER(TRIM(a.estado)) = 'activa'";
+}
+
+function directivo_estado_practica_normalizado(string $estado): string
+{
+    return strtolower(trim($estado));
+}
+
+function directivo_estados_practica_ui(): array
+{
+    return [
+        'postulado' => 'Postulado',
+        'asignado' => 'Asignado',
+        'en_curso' => 'En curso',
+        'informe_entregado' => 'Informe entregado',
+        'evaluado' => 'Evaluado',
+        'finalizado' => 'Finalizada',
+        'cancelada' => 'Cancelada',
+    ];
+}
+
+function directivo_etiqueta_estado_practica(string $estado): string
+{
+    $estado = directivo_estado_practica_normalizado($estado);
+    $mapa = directivo_estados_practica_ui();
+    return $mapa[$estado] ?? ($estado !== '' ? ucwords(str_replace('_', ' ', $estado)) : 'Sin estado');
+}
+
+function directivo_clase_estado_practica(string $estado): string
+{
+    $estado = directivo_estado_practica_normalizado($estado);
+    return match ($estado) {
+        'asignado' => 'badge-asignado',
+        'en_curso' => 'badge-en-curso',
+        'finalizado', 'evaluado' => 'badge-finalizada',
+        'informe_entregado' => 'badge-evaluado',
+        'postulado' => 'badge-postulado',
+        'cancelada' => 'badge-cancelada',
+        default => 'badge-finalizada',
+    };
+}
 ?>

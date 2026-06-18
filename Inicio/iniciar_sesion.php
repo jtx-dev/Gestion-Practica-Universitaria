@@ -17,27 +17,27 @@ function login_limpiar_texto(string $valor): string
 
 function login_redirigir_por_rol(string $rol): void
 {
-    $rol = trim($rol);
-    if ($rol === 'Administrador') {
+    $rol = strtolower(trim($rol));
+    if ($rol === 'administrador') {
         header('Location: admin/inicio.php');
         exit;
     }
 
-    if ($rol === 'Directivo') {
+    if ($rol === 'directivo' || $rol === 'director') {
         header('Location: directivo/inicio.php');
         exit;
     }
-    if ($rol === 'Coordinador') {
+    if ($rol === 'coordinador') {
         header('Location: coord/inicio.php');
         exit;
     }
 
-    if ($rol === 'Estudiante') {
+    if ($rol === 'estudiante') {
         header('Location: estudiante/inicio.php');
         exit;
     }
 
-    if ($rol === 'Empresa') {
+    if ($rol === 'empresa') {
         header('Location: empresas.php');
         exit;
     }
