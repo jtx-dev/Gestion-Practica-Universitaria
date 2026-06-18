@@ -156,84 +156,75 @@ $resultado = mysqli_query($conexion, $sql_ofertas);
 
                         <hr>
 
-                        <h6 class="fw-bold">Matching de postulantes</h6>
+                        <h6 class="fw-bold">Matching de postulantes (Algoritmo de Afinidad)</h6>
 
                         <?php
                         $id_oferta = $fila['id_oferta'];
 
+                        // Nuevo Algoritmo de Afinidad: 
+                        // Calcula el porcentaje basado en la cercanía de las competencias del estudiante a los requisitos de la oferta.
                         $sql_postulantes = "SELECT 
-                                                p.id_postulacion,
-                                                p.estado_postulacion,
-                                                p.cv_estudiante,
                                                 e.id_usuario,
                                                 e.nombre,
                                                 e.apellido,
                                                 e.nivel_curricular,
-                                                e.habilidades
+                                                p.id_postulacion,
+                                                p.cv_estudiante,
+                                                -- Obtenemos las palabras clave (competencias) relacionadas
+                                                GROUP_CONCAT(CONCAT(c.nombre, ' (Lvl ', ec.nivel_actual, ')') SEPARATOR ', ') as palabras_clave,
+                                                -- Cálculo de afinidad: 100 menos el promedio de las diferencias (escalado de 1-5 a 0-100)
+                                                ROUND(100 - AVG(ABS(r.nivel_requerido - ec.nivel_actual) * 20), 0) AS porcentaje_afinidad
                                             FROM postulacion p
-                                            INNER JOIN estudiante e 
-                                            ON p.id_estudiante = e.id_usuario
-                                            WHERE p.id_oferta = '$id_oferta'";
+                                            INNER JOIN estudiante e ON p.id_estudiante = e.id_usuario
+                                            INNER JOIN oferta_requisitos r ON p.id_oferta = r.id_oferta
+                                            INNER JOIN competencias c ON r.id_competencia = c.id
+                                            INNER JOIN estudiante_competencias ec ON ec.id_estudiante = e.id_usuario 
+                                                AND ec.id_competencia = r.id_competencia
+                                            WHERE p.id_oferta = '$id_oferta'
+                                            GROUP BY e.id_usuario
+                                            ORDER BY porcentaje_afinidad DESC";
 
                         $resultado_postulantes = mysqli_query($conexion, $sql_postulantes);
 
                         if (mysqli_num_rows($resultado_postulantes) > 0) {
 
                             while ($postulante = mysqli_fetch_assoc($resultado_postulantes)) {
-
-                                $puntaje = 0;
-
-                                /* Nivel curricular */
-                                if ($postulante['nivel_curricular'] >= 8) {
-                                    $puntaje = $puntaje + 50;
-                                } elseif ($postulante['nivel_curricular'] >= 7) {
-                                    $puntaje = $puntaje + 40;
-                                } elseif ($postulante['nivel_curricular'] >= 6) {
-                                    $puntaje = $puntaje + 30;
-                                }
-
-                                /* Habilidades */
-                                $habilidades = strtolower($postulante['habilidades']);
-                                $requisitos = strtolower($fila['requisitos']);
-
-                                if (strpos($habilidades, 'php') !== false && strpos($requisitos, 'php') !== false) {
-                                    $puntaje = $puntaje + 25;
-                                }
-
-                                if (strpos($habilidades, 'mysql') !== false && strpos($requisitos, 'mysql') !== false) {
-                                    $puntaje = $puntaje + 25;
-                                }
-
-                                if ($puntaje > 100) {
-                                    $puntaje = 100;
-                                }
+                                $afinidad = $postulante['porcentaje_afinidad'];
+                                $badge_color = 'bg-danger';
+                                if ($afinidad >= 80) $badge_color = 'bg-success';
+                                elseif ($afinidad >= 50) $badge_color = 'bg-warning text-dark';
                         ?>
 
-                                <div class="border rounded p-3 mb-2 bg-light">
-                                    <strong>
-                                        <?php echo $postulante['nombre'] . " " . $postulante['apellido']; ?>
-                                    </strong>
-
-                                    <div class="small text-muted">
-                                        Nivel curricular:
-                                        <?php echo $postulante['nivel_curricular']; ?>
+                                <div class="border rounded p-3 mb-2 bg-light shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <strong class="text-primary">
+                                                <?php echo htmlspecialchars($postulante['nombre'] . " " . $postulante['apellido']); ?>
+                                            </strong>
+                                            <div class="small text-muted">
+                                                Nivel curricular: <?php echo $postulante['nivel_curricular']; ?>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge <?php echo $badge_color; ?> fs-6">
+                                                <?php echo $afinidad; ?>% afinidad
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div class="small">
-                                        <strong>Habilidades:</strong>
-                                        <?php echo $postulante['habilidades']; ?>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block fw-bold">Palabras clave / Competencias:</small>
+                                        <span class="small text-dark">
+                                            <i class="bi bi-tags-fill me-1 text-secondary"></i>
+                                            <?php echo htmlspecialchars($postulante['palabras_clave']); ?>
+                                        </span>
                                     </div>
-
-                                    <span class="badge bg-primary mt-2">
-                                        <?php echo $puntaje; ?>% afinidad
-                                    </span>
 
                                     <?php if ($postulante['cv_estudiante'] != "") { ?>
-                                        <br>
                                         <a href="../<?php echo $postulante['cv_estudiante']; ?>" 
                                            target="_blank"
-                                           class="btn btn-outline-primary btn-sm mt-2">
-                                            Ver CV
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-file-earmark-pdf"></i> Ver CV
                                         </a>
                                     <?php } ?>
                                 </div>
@@ -242,10 +233,13 @@ $resultado = mysqli_query($conexion, $sql_ofertas);
                             }
 
                         } else {
+                            // Si no hay datos en las nuevas tablas de competencias, mostramos un aviso
+                            // o podrías mantener un fallback a la lógica antigua.
                         ?>
 
                             <div class="alert alert-info mt-2 mb-0">
-                                No hay postulantes para esta oferta.
+                                <i class="bi bi-info-circle me-2"></i>
+                                No hay postulantes registrados o falta configurar sus competencias para el matching.
                             </div>
 
                         <?php } ?>

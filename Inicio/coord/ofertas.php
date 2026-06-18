@@ -138,9 +138,6 @@ $resultado = mysqli_query($conexion, $sql_ofertas);
                 </p>
             </div>
 
-            <span class="badge bg-warning text-dark fs-6">
-                Ofertas pendientes
-            </span>
         </header>
 
         <div class="card card-custom p-4 bg-white">
