@@ -6,7 +6,6 @@ Sistema web para centralizar la gestión de prácticas profesionales, asignacion
 
 [![Estado](https://img.shields.io/badge/status-en%20desarrollo-orange)](#)
 [![Versión](https://img.shields.io/badge/version-1.0.0-blue)](#)
-[![Licencia](https://img.shields.io/badge/license-MIT-green)](#)
 
 ## Introducción
 
@@ -186,21 +185,6 @@ git add .
 git commit -m "Describe el cambio"
 git push origin feature/nombre-de-la-mejora
 ```
-
-## Licencia
-
-Este proyecto se distribuye bajo licencia MIT.
-
-```text
-[Insertar archivo LICENSE aquí si aún no existe]
-```
-
-## Contacto
-
-- Autor: [Insertar nombre del autor aquí]
-- Correo: [Insertar correo de contacto aquí]
-- GitHub: [Insertar enlace al perfil o repositorio aquí]
-- LinkedIn: [Insertar enlace de contacto aquí]
 
 ## Información del proyecto
 
