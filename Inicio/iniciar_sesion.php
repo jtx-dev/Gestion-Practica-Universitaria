@@ -18,11 +18,15 @@ function login_limpiar_texto(string $valor): string
 function login_redirigir_por_rol(string $rol): void
 {
     $rol = trim($rol);
-    if ($rol === 'Administrador' || $rol === 'Directivo') {
+    if ($rol === 'Administrador') {
         header('Location: admin/inicio.php');
         exit;
     }
 
+    if ($rol === 'Directivo') {
+        header('Location: directivo/index.php');
+        exit;
+    }
     if ($rol === 'Coordinador') {
         header('Location: coord/inicio.php');
         exit;
