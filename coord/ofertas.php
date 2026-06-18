@@ -6,7 +6,7 @@ if (isset($_GET['aprobar'])) {
 
     $id_oferta = $_GET['aprobar'];
 
-    $sql = "UPDATE Oferta_Practica
+    $sql = "UPDATE oferta_practica
             SET estado_oferta = 'activa'
             WHERE id_oferta = '$id_oferta'";
 
@@ -21,7 +21,7 @@ if (isset($_GET['rechazar'])) {
 
     $id_oferta = $_GET['rechazar'];
 
-    $sql = "UPDATE Oferta_Practica
+    $sql = "UPDATE oferta_practica
             SET estado_oferta = 'rechazada'
             WHERE id_oferta = '$id_oferta'";
 
@@ -45,9 +45,9 @@ $sql_ofertas = "SELECT
                     e.nombre_empresa,
                     e.rut_empresa,
                     c.nombre_carrera
-                FROM Oferta_Practica o
-                INNER JOIN Empresa e ON o.id_empresa = e.id_usuario
-                INNER JOIN Carrera c ON o.id_carrera = c.id_carrera
+                FROM oferta_practica o
+                INNER JOIN empresa e ON o.id_empresa = e.id_usuario
+                INNER JOIN carrera c ON o.id_carrera = c.id_carrera
                 WHERE o.estado_oferta = 'pendiente_aprobacion'
                 ORDER BY o.fecha_publicacion DESC";
 

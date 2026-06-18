@@ -1,5 +1,7 @@
 <?php
 include('../conexion.php');
+/** @var mysqli $conexion */
+// esta linea evita ver errores del $conexion del intelephense.
 
 ?>
 <!DOCTYPE html>

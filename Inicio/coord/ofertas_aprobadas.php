@@ -1,5 +1,7 @@
 <?php
 include('../../conexion.php');
+/** @var mysqli $conexion */
+// esta linea evita ver errores del $conexion del intelephense.
 
 /* CONSULTAR OFERTAS APROBADAS */
 $sql_ofertas = "SELECT
@@ -16,9 +18,9 @@ $sql_ofertas = "SELECT
                     e.nombre_empresa,
                     e.rut_empresa,
                     c.nombre_carrera
-                FROM Oferta_Practica o
-                INNER JOIN Empresa e ON o.id_empresa = e.id_usuario
-                INNER JOIN Carrera c ON o.id_carrera = c.id_carrera
+                FROM oferta_practica o
+                INNER JOIN empresa e ON o.id_empresa = e.id_usuario
+                INNER JOIN carrera c ON o.id_carrera = c.id_carrera
                 WHERE o.estado_oferta = 'activa'
                 ORDER BY o.fecha_publicacion DESC";
 

@@ -4,8 +4,8 @@ require_once 'config_directivo/conexion.php';
 // Distribución por estado de práctica
 $dist_estado = mysqli_query($conexion, "
     SELECT p.estado_practica, COUNT(*) as total
-    FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+    FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera
     GROUP BY p.estado_practica
 ");
@@ -13,10 +13,10 @@ $dist_estado = mysqli_query($conexion, "
 // Top empresas con más prácticas
 $top_empresas = mysqli_query($conexion, "
     SELECT emp.razon_social, COUNT(*) as total, ROUND(AVG(p.nota_final),1) as promedio
-    FROM Practica p
-    JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
-    JOIN Empresa emp ON emp.id_usuario = o.id_empresa
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+    FROM practica p
+    JOIN oferta_practica o ON o.id_oferta = p.id_oferta
+    JOIN empresa emp ON emp.id_usuario = o.id_empresa
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera
     GROUP BY emp.id_usuario, emp.razon_social
     ORDER BY total DESC LIMIT 5
@@ -25,8 +25,8 @@ $top_empresas = mysqli_query($conexion, "
 // Prácticas por mes (últimos 6 meses)
 $por_mes = mysqli_query($conexion, "
     SELECT DATE_FORMAT(fecha_inicio,'%Y-%m') as mes, COUNT(*) as total
-    FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+    FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera
       AND fecha_inicio >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
     GROUP BY mes ORDER BY mes ASC
@@ -35,8 +35,8 @@ $por_mes = mysqli_query($conexion, "
 // Promedio notas
 $notas     = mysqli_query($conexion, "
     SELECT ROUND(AVG(nota_final),2) as promedio, COUNT(*) as total
-    FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+    FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera AND nota_final IS NOT NULL
 ");
 $nota_data = mysqli_fetch_assoc($notas);

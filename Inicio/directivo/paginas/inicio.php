@@ -5,8 +5,8 @@ require_once 'config_directivo/conexion.php';
 $stats = [];
 
 // Total estudiantes en práctica activa
-$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera
     AND p.estado_practica NOT IN ('Finalizada','Cancelada')");
 
@@ -17,15 +17,15 @@ echo "<pre>";
 print_r($fila);
 echo "</pre>";
 // Practicas finalizadas
-$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera AND p.estado_practica = 'Finalizada'");
 
 $stats['finalizadas'] = mysqli_fetch_assoc($r)['total'];
 
 // Evaluaciones pendientes del directivo
-$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+$r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE p.id_directivo = $id_directivo
     AND p.estado_practica = 'Informe Entregado'
     AND p.nota_final IS NULL");
@@ -33,17 +33,17 @@ $r = mysqli_query($conexion, "SELECT COUNT(*) as total FROM Practica p
 $stats['pendientes_eval'] = mysqli_fetch_assoc($r)['total'];
 
 // Promedio nota final
-$r = mysqli_query($conexion, "SELECT ROUND(AVG(p.nota_final),1) as promedio FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+$r = mysqli_query($conexion, "SELECT ROUND(AVG(p.nota_final),1) as promedio FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
     WHERE e.id_carrera = $id_carrera AND p.nota_final IS NOT NULL");
 
 $stats['promedio'] = mysqli_fetch_assoc($r)['promedio'] ?? '—';
 // Ultimas 5 prácticas con actividad reciente
 $recientes = mysqli_query($conexion,"
     SELECT e.nombre, e.apellido, p.estado_practica, p.fecha_inicio, o.titulo
-    FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
-    JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
+    FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
+    JOIN oferta_practica o ON o.id_oferta = p.id_oferta
     WHERE e.id_carrera = $id_carrera
     ORDER BY p.fecha_inicio DESC
     LIMIT 5

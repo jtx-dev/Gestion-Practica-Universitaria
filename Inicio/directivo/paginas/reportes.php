@@ -33,10 +33,10 @@ if ($exportar === '1' && in_array($formato, ['pdf','excel'])) {
             p.fecha_termino,
             p.nota_final,
             p.horas_totales
-        FROM Practica p
-        JOIN Estudiante e ON e.id_usuario = p.id_estudiante
-        JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
-        JOIN Empresa emp ON emp.id_usuario = o.id_empresa
+        FROM practica p
+        JOIN estudiante e ON e.id_usuario = p.id_estudiante
+        JOIN oferta_practica o ON o.id_oferta = p.id_oferta
+        JOIN empresa emp ON emp.id_usuario = o.id_empresa
         $where
         ORDER BY e.apellido ASC
     ");

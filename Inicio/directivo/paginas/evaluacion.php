@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_evaluacion'])
     } else {
         // Verificar que la práctica pertenece a este directivo y carrera
         $check = mysqli_query($conexion, "
-            SELECT p.id_practica FROM Practica p
-            JOIN Estudiante e ON e.id_usuario = p.id_estudiante
+            SELECT p.id_practica FROM practica p
+            JOIN estudiante e ON e.id_usuario = p.id_estudiante
             WHERE p.id_practica = $id_practica
               AND p.id_directivo = $id_directivo
               AND e.id_carrera = $id_carrera
@@ -31,13 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_evaluacion'])
         } else {
             // Insertar evaluación
             mysqli_query($conexion,"
-                INSERT INTO Evaluacion (id_practica, nota_final, comentarios, fecha_evaluacion)
+                INSERT INTO evaluacion (id_practica, nota_final, comentarios, fecha_evaluacion)
                 VALUES ($id_practica, $nota_final, '$comentarios', '$fecha_hoy')
             ");
 
             // Actualizar nota_final en Práctica y estado
             mysqli_query($conexion,"
-                UPDATE Practica
+                UPDATE practica
                 SET nota_final = $nota_final, estado_practica = 'Evaluado'
                 WHERE id_practica = $id_practica
             ");
@@ -52,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_evaluacion'])
 $pendientes = mysqli_query($conexion,"
     SELECT p.id_practica, e.nombre, e.apellido, o.titulo, emp.razon_social,
            p.fecha_inicio, p.estado_practica
-    FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
-    JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
-    JOIN Empresa emp ON emp.id_usuario = o.id_empresa
+    FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
+    JOIN oferta_practica o ON o.id_oferta = p.id_oferta
+    JOIN empresa emp ON emp.id_usuario = o.id_empresa
     WHERE p.id_directivo = $id_directivo
       AND e.id_carrera = $id_carrera
       AND p.estado_practica IN ('Informe Entregado','En Curso')
@@ -67,10 +67,10 @@ $pendientes = mysqli_query($conexion,"
 $realizadas = mysqli_query($conexion,"
     SELECT p.id_practica, e.nombre, e.apellido, o.titulo,
            ev.nota_final, ev.comentarios, ev.fecha_evaluacion
-    FROM Evaluacion ev
-    JOIN Practica p ON p.id_practica = ev.id_practica
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
-    JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
+    FROM evaluacion ev
+    JOIN practica p ON p.id_practica = ev.id_practica
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
+    JOIN oferta_practica o ON o.id_oferta = p.id_oferta
     WHERE p.id_directivo = $id_directivo
       AND e.id_carrera = $id_carrera
     ORDER BY ev.fecha_evaluacion DESC

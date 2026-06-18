@@ -23,12 +23,12 @@ $estudiantes = mysqli_query($conexion, "
         o.titulo AS oferta_titulo,
         o.duracion_meses,
         emp.razon_social,
-        (SELECT COUNT(*) FROM Bitacora b WHERE b.id_practica = p.id_practica) AS total_bitacoras,
-        (SELECT SUM(b2.horas_registradas) FROM Bitacora b2 WHERE b2.id_practica = p.id_practica) AS horas_bitacora
-    FROM Practica p
-    JOIN Estudiante e ON e.id_usuario = p.id_estudiante
-    JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
-    JOIN Empresa emp ON emp.id_usuario = o.id_empresa
+        (SELECT COUNT(*) FROM bitacora b WHERE b.id_practica = p.id_practica) AS total_bitacoras,
+        (SELECT SUM(b2.horas_registradas) FROM bitacora b2 WHERE b2.id_practica = p.id_practica) AS horas_bitacora
+    FROM practica p
+    JOIN estudiante e ON e.id_usuario = p.id_estudiante
+    JOIN oferta_practica o ON o.id_oferta = p.id_oferta
+    JOIN empresa emp ON emp.id_usuario = o.id_empresa
     $where
     ORDER BY e.apellido ASC
 ");
@@ -163,10 +163,10 @@ if ($ver_id):
         SELECT e.nombre, e.apellido, e.nivel_curricular, e.habilidades,
                p.id_practica, p.estado_practica, p.fecha_inicio, p.fecha_termino, p.nota_final,
                o.titulo, emp.razon_social
-        FROM Practica p
-        JOIN Estudiante e ON e.id_usuario = p.id_estudiante
-        JOIN Oferta_Practica o ON o.id_oferta = p.id_oferta
-        JOIN Empresa emp ON emp.id_usuario = o.id_empresa
+        FROM practica p
+        JOIN estudiante e ON e.id_usuario = p.id_estudiante
+        JOIN oferta_practica o ON o.id_oferta = p.id_oferta
+        JOIN empresa emp ON emp.id_usuario = o.id_empresa
         WHERE p.id_estudiante = $ver_id AND e.id_carrera = $id_carrera
         ORDER BY p.id_practica DESC LIMIT 1
     ");
@@ -176,7 +176,7 @@ if ($ver_id):
         $id_practica = $p['id_practica'];
         $bitacoras = mysqli_query($conn2,"
             SELECT fecha_registro, actividades, logros, horas_registradas
-            FROM Bitacora WHERE id_practica = $id_practica ORDER BY fecha_registro DESC
+            FROM bitacora WHERE id_practica = $id_practica ORDER BY fecha_registro DESC
         ");
 ?>
 <div class="mt-4 card-section">
