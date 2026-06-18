@@ -8,34 +8,73 @@ if (isset($_POST['guardar_bitacora'])) {
     $actividades = $_POST['actividades'];
     $logros = $_POST['logros'];
     $horas = $_POST['horas_registradas'];
-    $sql = "
-    INSERT INTO bitacora
-    (
-        id_practica,
-        fecha_registro,
-        actividades,
-        logros,
-        horas_registradas
-    )
-    VALUES
-    (
-        $idPractica,
-        '$fecha',
-        '$actividades',
-        '$logros',
-        '$horas'
-    )
-    ";
 
-    mysqli_query($conexion, $sql);
+    $consultaUltima = mysqli_query(
+        $conexion,
+        "SELECT fecha_registro
+        FROM bitacora
+        WHERE id_practica = $idPractica
+        ORDER BY fecha_registro DESC
+        LIMIT 1"
+    );
 
-    header("Location: documentos.php");
-    exit();
+    $ultimaBitacora = mysqli_fetch_assoc($consultaUltima);
+
+    if (empty($fecha) || empty($actividades) || empty($horas)) {
+
+        $error = "Por favor completa todos los campos";
+
+    } elseif ($horas > 42) {
+
+        $error = "Has superado el límite de 42 horas semanales permitidas por norma institucional";
+
+    } elseif ($ultimaBitacora) {
+
+        $dias = floor(
+            (strtotime($fecha) - strtotime($ultimaBitacora['fecha_registro']))
+            / 86400
+        );
+
+        if ($dias < 15) {
+
+            $error = "Deben transcurrir 15 días entre cada registro de bitácora";
+
+        }
+
+    }
+
+    if (!isset($error)) {
+
+        $sql = "
+        INSERT INTO bitacora
+        (
+            id_practica,
+            fecha_registro,
+            actividades,
+            logros,
+            horas_registradas
+        )
+        VALUES
+        (
+            $idPractica,
+            '$fecha',
+            '$actividades',
+            '$logros',
+            '$horas'
+        )
+        ";
+
+        mysqli_query($conexion, $sql);
+
+        $mensaje = "Bitácora guardada correctamente";
+    }
 }
+
 
 $resBitacoras = mysqli_query($conexion, "
     SELECT *
     FROM bitacora
+    WHERE id_practica = $idPractica
     ORDER BY fecha_registro DESC
 ");
 ?>
@@ -52,8 +91,10 @@ $resBitacoras = mysqli_query($conexion, "
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../../assets/css/base.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -64,6 +105,34 @@ $resBitacoras = mysqli_query($conexion, "
 
         <h1 class="mb-1">Mis Documentos</h1>
         <p class="text-muted mb-4">Seguimiento de tu practica profesional.</p>
+        <?php if (isset($error)) { ?>
+
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '<?php echo $error; ?>',
+                    confirmButtonColor: '#0d6efd',
+                    background: '#ffffff',
+                    color: '#495057'
+                });
+            </script>
+
+        <?php } ?>
+        <?php if (isset($mensaje)) { ?>
+
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Bitácora registrada',
+                    text: '<?php echo $mensaje; ?>',
+                    confirmButtonColor: '#0d6efd',
+                    background: '#ffffff',
+                    color: '#495057'
+                });
+            </script>
+
+        <?php } ?>
 
         <div class="card card-custom mb-4">
 
@@ -110,7 +179,9 @@ $resBitacoras = mysqli_query($conexion, "
         <div class="card card-custom">
 
             <div class="card-body p-4">
-
+                <div class="alert alert-info">
+                    Las bitácoras deben registrarse cada 15 días según la normativa de práctica profesional.
+                </div>
                 <h4 class="fw-bold mb-4">Historial de Bitácoras</h4>
 
                 <table class="table table-hover">
@@ -146,7 +217,8 @@ $resBitacoras = mysqli_query($conexion, "
 
                                 <td>
 
-                                    <a href="detalle_bitacora.php?id=<?php echo $bitacora['id_bitacora']; ?>" class="btn btn-sm btn-outline-primary">Ver</a>
+                                    <a href="detalle_bitacora.php?id=<?php echo $bitacora['id_bitacora']; ?>"
+                                        class="btn btn-sm btn-outline-primary">Ver</a>
 
                                 </td>
 

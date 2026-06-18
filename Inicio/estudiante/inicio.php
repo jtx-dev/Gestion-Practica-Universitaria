@@ -2,18 +2,7 @@
 include('../../conexion.php');
 //Para ocultar ofertas ya postuladas
 $id_estudiante = 3;
-$sql = "
-SELECT o.*, e.nombre_empresa
-FROM oferta_practica o
-INNER JOIN empresa e
-ON o.id_empresa = e.id_usuario
-WHERE o.id_oferta NOT IN
-(
-    SELECT id_oferta
-    FROM postulacion
-    WHERE id_estudiante = $id_estudiante
-)
-";
+
 $sqlEstudiante = "
     SELECT e.*, c.nombre_carrera
     FROM estudiante e
@@ -24,7 +13,23 @@ $sqlEstudiante = "
 
 $resEstudiante = mysqli_query($conexion, $sqlEstudiante);
 $estudiante = mysqli_fetch_assoc($resEstudiante);
+
+$sql = "
+SELECT o.*, e.nombre_empresa
+FROM oferta_practica o
+INNER JOIN empresa e
+ON o.id_empresa = e.id_usuario
+WHERE o.id_carrera = {$estudiante['id_carrera']}
+AND o.id_oferta NOT IN
+(
+    SELECT id_oferta
+    FROM postulacion
+    WHERE id_estudiante = $id_estudiante
+)
+";
+
 $resultado = mysqli_query($conexion, $sql);
+
 ?>
 
 <!DOCTYPE html>
