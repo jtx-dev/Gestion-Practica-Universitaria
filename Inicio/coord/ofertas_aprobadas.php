@@ -1,5 +1,5 @@
 <?php
-include('../conexion.php');
+include('../../conexion.php');
 
 /* CONSULTAR OFERTAS APROBADAS */
 $sql_ofertas = "SELECT
@@ -118,6 +118,10 @@ $resultado = mysqli_query($conexion, $sql_ofertas);
                 <i class="bi bi-speedometer2 me-2"></i> Vista Global
             </a>
 
+            <a class="nav-link" href="alumnos.php">
+                <i class="bi bi-people me-2"></i> Alumnos
+            </a>
+
             <a class="nav-link" href="ofertas.php">
                 <i class="bi bi-building me-2"></i> Empresas / Ofertas
             </a>
@@ -128,6 +132,10 @@ $resultado = mysqli_query($conexion, $sql_ofertas);
 
             <a class="nav-link" href="ofertas_rechazadas.php">
                 <i class="bi bi-x-circle me-2"></i> Ofertas Rechazadas
+            </a>
+
+            <a class="nav-link" href="validacion.php">
+                <i class="bi bi-file-earmark-check me-2"></i> Validaciones
             </a>
 
             <a class="nav-link text-danger mt-auto mb-4" href="../inicio.php">
