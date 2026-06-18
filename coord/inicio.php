@@ -8,55 +8,12 @@ include('../conexion.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Coordinador - Gestión de Prácticas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/base.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --sidebar-width: 260px;
-            --primary-blue: #0d6efd;
-            --bg-gray: #f8f9fa;
-        }
-
-        body { background-color: var(--bg-gray); }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            position: fixed;
-            background: white;
-            border-right: 1px solid #dee2e6;
-            z-index: 1000;
-        }
-
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 40px;
-        }
-
-        .nav-link {
-            color: #495057;
-            padding: 12px 20px;
-            margin: 4px 15px;
-            border-radius: 8px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-link:hover { background-color: #f1f3f5; color: var(--primary-blue); }
-        .nav-link.active { background-color: #e7f1ff; color: var(--primary-blue); }
-        .nav-link.text-danger:hover { background-color: #fff5f5; }
-
-        .card-custom {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .stat-card {
-            border-left: 4px solid var(--primary-blue);
-        }
-    </style>
 </head>
 <body>
 

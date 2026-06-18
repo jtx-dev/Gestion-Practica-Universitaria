@@ -1,8 +1,16 @@
 <?php
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+// Redirigir si no es coordinador
+if (!isset($_SESSION['nombre_rol']) || $_SESSION['nombre_rol'] !== 'Coordinador') {
+    header('Location: ../iniciar_sesion.php');
+    exit;
+}
+
 include('../conexion.php');
 /** @var mysqli $conexion */
-// esta linea evita ver errores del $conexion del intelephense.
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -10,55 +18,12 @@ include('../conexion.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Coordinador - Gestión de Prácticas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../assets/css/base.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --sidebar-width: 260px;
-            --primary-blue: #0d6efd;
-            --bg-gray: #f8f9fa;
-        }
-
-        body { background-color: var(--bg-gray); }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            position: fixed;
-            background: white;
-            border-right: 1px solid #dee2e6;
-            z-index: 1000;
-        }
-
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 40px;
-        }
-
-        .nav-link {
-            color: #495057;
-            padding: 12px 20px;
-            margin: 4px 15px;
-            border-radius: 8px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-link:hover { background-color: #f1f3f5; color: var(--primary-blue); }
-        .nav-link.active { background-color: #e7f1ff; color: var(--primary-blue); }
-        .nav-link.text-danger:hover { background-color: #fff5f5; }
-
-        .card-custom {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .stat-card {
-            border-left: 4px solid var(--primary-blue);
-        }
-    </style>
 </head>
 <body>
 
@@ -71,6 +36,8 @@ include('../conexion.php');
             <a class="nav-link active" href="inicio.php"><i class="bi bi-speedometer2 me-2"></i> Vista Global</a>
             <a class="nav-link" href="alumnos.php"><i class="bi bi-people me-2"></i> Alumnos</a>
             <a class="nav-link" href="ofertas.php"><i class="bi bi-building me-2"></i> Empresas / Ofertas</a>
+            <a class="nav-link" href="ofertas_aprobadas.php"><i class="bi bi-check-circle me-2"></i> Ofertas Aprobadas</a>
+            <a class="nav-link" href="ofertas_rechazadas.php"><i class="bi bi-x-circle me-2"></i> Ofertas Rechazadas</a>
             <a class="nav-link" href="validacion.php"><i class="bi bi-file-earmark-check me-2"></i> Validaciones</a>
             
             <a class="nav-link text-danger mt-auto mb-4" href="../inicio.php">
@@ -82,7 +49,7 @@ include('../conexion.php');
     <main class="main-content">
         <header class="mb-5 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="fw-bold mb-1">Resumen de Gestión</h2>
+                <h2 class="mb-1">Resumen de Gestión</h2>
                 <p class="text-muted">Control de procesos académicos y vinculación empresarial.</p>
             </div>
             <button class="btn btn-primary"><i class="bi bi-download me-2"></i>Generar Reporte Semanal</button>
