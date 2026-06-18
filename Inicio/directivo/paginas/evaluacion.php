@@ -20,9 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_evaluacion'])
         $check = mysqli_query($conexion, "
             SELECT p.id_practica FROM practica p
             JOIN estudiante e ON e.id_usuario = p.id_estudiante
+            INNER JOIN asignacion a ON a.id_estudiante = e.id_usuario
             WHERE p.id_practica = $id_practica
-              AND p.id_directivo = $id_directivo
-              AND e.id_carrera = $id_carrera
+              AND a.id_directivo = $id_directivo
+              AND LOWER(TRIM(a.estado)) = 'activa'
         ");
 
         if (mysqli_num_rows($check) === 0) {
@@ -54,11 +55,12 @@ $pendientes = mysqli_query($conexion,"
            p.fecha_inicio, p.estado_practica
     FROM practica p
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
+    INNER JOIN asignacion a ON a.id_estudiante = e.id_usuario
     JOIN oferta_practica o ON o.id_oferta = p.id_oferta
     JOIN empresa emp ON emp.id_usuario = o.id_empresa
-    WHERE p.id_directivo = $id_directivo
-      AND e.id_carrera = $id_carrera
-      AND p.estado_practica IN ('Informe Entregado','En Curso')
+    WHERE a.id_directivo = $id_directivo
+      AND LOWER(TRIM(a.estado)) = 'activa'
+      AND p.estado_practica IN ('informe_entregado','en_curso')
       AND p.nota_final IS NULL
     ORDER BY p.fecha_inicio DESC
 ");
@@ -70,9 +72,10 @@ $realizadas = mysqli_query($conexion,"
     FROM evaluacion ev
     JOIN practica p ON p.id_practica = ev.id_practica
     JOIN estudiante e ON e.id_usuario = p.id_estudiante
+    INNER JOIN asignacion a ON a.id_estudiante = e.id_usuario
     JOIN oferta_practica o ON o.id_oferta = p.id_oferta
-    WHERE p.id_directivo = $id_directivo
-      AND e.id_carrera = $id_carrera
+    WHERE a.id_directivo = $id_directivo
+      AND LOWER(TRIM(a.estado)) = 'activa'
     ORDER BY ev.fecha_evaluacion DESC
     LIMIT 10
 ");
@@ -183,7 +186,7 @@ $modal_id = isset($_GET['evaluar']) ? (int)$_GET['evaluar'] : null;
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="index.php?pagina=evaluacion">
+            <form method="POST" action="inicio.php?pagina=evaluacion">
                 <div class="modal-body">
                     <input type="hidden" name="id_practica" id="modal_id_practica">
                     <p class="mb-3 text-muted small">

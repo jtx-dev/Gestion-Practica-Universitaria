@@ -22,14 +22,24 @@ function admin_buscar_por_id(array $items, int $id, string $clave): ?array
     return null;
 }
 
+function admin_normalizar_rol_local(string $nombreRol): string
+{
+    return strtolower(trim($nombreRol));
+}
+
+function admin_rol_es_directivo_local(string $nombreRol): bool
+{
+    return in_array(admin_normalizar_rol_local($nombreRol), ['directivo', 'director'], true);
+}
+
 function admin_rol_requiere_carrera_local(string $nombreRol): bool
 {
-    return in_array($nombreRol, ['Estudiante', 'Coordinador', 'Directivo'], true);
+    return in_array(admin_normalizar_rol_local($nombreRol), ['estudiante', 'coordinador'], true) || admin_rol_es_directivo_local($nombreRol);
 }
 
 function admin_rol_soportado_local(string $nombreRol): bool
 {
-    return in_array($nombreRol, ['Estudiante', 'Coordinador', 'Directivo'], true);
+    return in_array(admin_normalizar_rol_local($nombreRol), ['estudiante', 'coordinador'], true) || admin_rol_es_directivo_local($nombreRol);
 }
 
 function admin_reiniciar_perfiles_usuario(mysqli $conexion, int $idUsuario): void
@@ -69,8 +79,8 @@ $roles = $idInstitucionActual > 0 ? admin_query_all(
     $conexion,
     "SELECT id_rol, nombre_rol
     FROM rol
-    WHERE estado = 'activo'
-      AND nombre_rol IN ('Estudiante', 'Coordinador', 'Directivo')
+    WHERE LOWER(TRIM(estado)) = 'activo'
+            AND LOWER(TRIM(nombre_rol)) NOT IN ('administrador', 'superadministrador', 'super administrador')
     ORDER BY nombre_rol"
 ) : [];
 
@@ -139,16 +149,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmtUsuario);
 
                 $nombreRol = (string) $rolSeleccionado['nombre_rol'];
-                if ($nombreRol === 'Administrador') {
+                $nombreRolNormalizado = admin_normalizar_rol_local($nombreRol);
+                if ($nombreRolNormalizado === 'administrador') {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO administrador (id_usuario, nombre, apellido) VALUES (?, ?, ?)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iss', $idUsuario, $nombre, $apellido);
-                } elseif ($nombreRol === 'Estudiante') {
+                } elseif ($nombreRolNormalizado === 'estudiante') {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO estudiante (id_usuario, id_carrera, nombre, apellido, nivel_curricular, habilidades, ramos_aprobados) VALUES (?, ?, ?, ?, 1, '', 0)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iiss', $idUsuario, $idCarrera, $nombre, $apellido);
-                } elseif ($nombreRol === 'Coordinador') {
+                } elseif ($nombreRolNormalizado === 'coordinador') {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO coordinador (id_usuario, id_carrera, nombre, apellido) VALUES (?, ?, ?, ?)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iiss', $idUsuario, $idCarrera, $nombre, $apellido);
-                } elseif ($nombreRol === 'Directivo') {
+                } elseif (admin_rol_es_directivo_local($nombreRol)) {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO directivo (id_usuario, id_carrera, nombre, apellido) VALUES (?, ?, ?, ?)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iiss', $idUsuario, $idCarrera, $nombre, $apellido);
                 } else {
@@ -163,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 mysqli_stmt_close($stmtPerfil);
 
-                if ($nombreRol === 'Administrador') {
+                if (admin_normalizar_rol_local($nombreRol) === 'administrador') {
                     $stmtInstitucion = mysqli_prepare($conexion, "UPDATE institucion SET id_administrador = ? WHERE id_institucion = ?");
                     if ($stmtInstitucion) {
                         mysqli_stmt_bind_param($stmtInstitucion, 'ii', $idUsuario, $idInstitucionActual);
@@ -255,16 +266,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 admin_reiniciar_perfiles_usuario($conexion, $idUsuario);
 
                 $nombreRol = (string) $rolSeleccionado['nombre_rol'];
-                if ($nombreRol === 'Administrador') {
+                $nombreRolNormalizado = admin_normalizar_rol_local($nombreRol);
+                if ($nombreRolNormalizado === 'administrador') {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO administrador (id_usuario, nombre, apellido) VALUES (?, ?, ?)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iss', $idUsuario, $nombre, $apellido);
-                } elseif ($nombreRol === 'Estudiante') {
+                } elseif ($nombreRolNormalizado === 'estudiante') {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO estudiante (id_usuario, id_carrera, nombre, apellido, nivel_curricular, habilidades, ramos_aprobados) VALUES (?, ?, ?, ?, 1, '', 0)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iiss', $idUsuario, $idCarrera, $nombre, $apellido);
-                } elseif ($nombreRol === 'Coordinador') {
+                } elseif ($nombreRolNormalizado === 'coordinador') {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO coordinador (id_usuario, id_carrera, nombre, apellido) VALUES (?, ?, ?, ?)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iiss', $idUsuario, $idCarrera, $nombre, $apellido);
-                } elseif ($nombreRol === 'Directivo') {
+                } elseif (admin_rol_es_directivo_local($nombreRol)) {
                     $stmtPerfil = mysqli_prepare($conexion, "INSERT INTO directivo (id_usuario, id_carrera, nombre, apellido) VALUES (?, ?, ?, ?)");
                     mysqli_stmt_bind_param($stmtPerfil, 'iiss', $idUsuario, $idCarrera, $nombre, $apellido);
                 } else {
@@ -286,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     mysqli_stmt_close($stmtClearAdmin);
                 }
 
-                if ($nombreRol === 'Administrador') {
+                if (admin_normalizar_rol_local($nombreRol) === 'administrador') {
                     $stmtSetAdmin = mysqli_prepare($conexion, "UPDATE institucion SET id_administrador = ? WHERE id_institucion = ?");
                     if ($stmtSetAdmin) {
                         mysqli_stmt_bind_param($stmtSetAdmin, 'ii', $idUsuario, $idInstitucionActual);
@@ -389,7 +401,7 @@ if ($idInstitucionActual > 0) {
         LEFT JOIN carrera cc ON cc.id_carrera = c.id_carrera
         LEFT JOIN carrera dc ON dc.id_carrera = d.id_carrera
         WHERE u.id_institucion = " . (int) $idInstitucionActual . "
-          AND r.nombre_rol IN ('Estudiante', 'Coordinador', 'Directivo')
+                    AND LOWER(TRIM(r.nombre_rol)) NOT IN ('administrador', 'superadministrador', 'super administrador')
         ORDER BY u.id_usuario DESC"
     );
 }
@@ -643,7 +655,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
         }
 
         const rolTexto = rolSelect.options[rolSelect.selectedIndex]?.text || '';
-        const requiereCarrera = ['Estudiante', 'Coordinador', 'Directivo'].includes(rolTexto);
+        const requiereCarrera = ['estudiante', 'coordinador', 'directivo', 'director'].includes(rolTexto.trim().toLowerCase());
         carreraSelect.required = requiereCarrera;
         carreraSelect.disabled = false;
     }
