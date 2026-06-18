@@ -269,7 +269,7 @@ $nav_items = [
             <small>Sesión iniciada como</small>
             <span><?= htmlspecialchars($nombre_directivo) ?></span>
         </div>
-        <a href="../logout.php" class="btn btn-sm btn-outline-light mt-2 w-100">
+        <a href="logout.php" class="btn btn-sm btn-outline-light mt-2 w-100">
             <i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
         </a>
     </div>
