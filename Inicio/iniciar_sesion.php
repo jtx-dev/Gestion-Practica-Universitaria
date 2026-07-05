@@ -18,6 +18,11 @@ function login_limpiar_texto(string $valor): string
 function login_redirigir_por_rol(string $rol): void
 {
     $rol = strtolower(trim($rol));
+    if ($rol === 'super administrador' || $rol === 'superadministrador') {
+        header('Location: superadmin/inicio.php');
+        exit;
+    }
+
     if ($rol === 'administrador') {
         header('Location: admin/inicio.php');
         exit;
@@ -57,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        u.correo, u.contrasena_hash, u.estado_cuenta,
                        r.nombre_rol,
                        COALESCE(i.nombre, '') AS nombre_institucion,
-                       COALESCE(a.nombre, e.nombre, c.nombre, d.nombre, em.nombre_empresa, '') AS nombre_usuario,
-                       COALESCE(a.apellido, e.apellido, c.apellido, d.apellido, '') AS apellido_usuario
+                       COALESCE(a.nombre, e.nombre, c.nombre, d.nombre, em.nombre_empresa, sa.nombre, '') AS nombre_usuario,
+                       COALESCE(a.apellido, e.apellido, c.apellido, d.apellido, sa.apellido, '') AS apellido_usuario
                 FROM usuario u
                 INNER JOIN rol r ON r.id_rol = u.id_rol
                 LEFT JOIN administrador a ON a.id_usuario = u.id_usuario
@@ -66,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 LEFT JOIN coordinador c ON c.id_usuario = u.id_usuario
                 LEFT JOIN directivo d ON d.id_usuario = u.id_usuario
                 LEFT JOIN empresa em ON em.id_usuario = u.id_usuario
+                LEFT JOIN superadministrador sa ON sa.id_usuario = u.id_usuario
                 LEFT JOIN institucion i ON i.id_administrador = u.id_usuario
                 WHERE u.correo = ?
                 LIMIT 1";
