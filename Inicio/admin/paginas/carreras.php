@@ -1,15 +1,10 @@
 <?php
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
-
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+// Las variables $conexion e $id_institucion ($idInstitucionActual) vienen de auth.php
+$idInstitucionActual = $id_institucion;
 
 $mensaje = '';
 $tipoMensaje = 'success';
-$idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
-$nombreInstitucionActual = 'Sin institucion';
+$nombreInstitucionActual = 'Sin institución';
 
 if ($idInstitucionActual > 0) {
     $stmtInstitucion = mysqli_prepare($conexion, "SELECT nombre FROM institucion WHERE id_institucion = ? LIMIT 1");
@@ -32,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($accion === 'crear' && $nombre !== '') {
         if ($idInstitucionActual <= 0) {
-            $mensaje = 'No se pudo determinar la institucion del administrador. Inicia sesion nuevamente.';
+            $mensaje = 'No se pudo determinar la institución del administrador. Inicia sesión nuevamente.';
             $tipoMensaje = 'danger';
         } else {
             $stmt = mysqli_prepare($conexion, "INSERT INTO carrera (nombre_carrera, codigo, id_institucion) VALUES (?, ?, ?)");
@@ -57,16 +52,18 @@ $carreras = $idInstitucionActual > 0 ? admin_query_all(
      WHERE c.id_institucion = " . (int) $idInstitucionActual . "
      ORDER BY c.id_carrera DESC"
 ) : [];
-
-admin_layout_header('Gestion de Carreras', 'Solo puedes crear carreras para tu institucion: ' . $nombreInstitucionActual);
 ?>
+
 <?php if ($mensaje !== ''): ?>
-    <div class="alert alert-<?= admin_e($tipoMensaje) ?>"><?= admin_e($mensaje) ?></div>
+    <div class="alert alert-<?= admin_e($tipoMensaje) ?> alert-dismissible fade show" role="alert">
+        <?= admin_e($mensaje) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 <?php endif; ?>
 
 <div class="card card-custom p-3 mb-4">
     <?php if ($idInstitucionActual <= 0): ?>
-        <div class="alert alert-warning mb-3">No se pudo identificar la institucion del administrador. La creacion de carreras esta deshabilitada.</div>
+        <div class="alert alert-warning mb-3">No se pudo identificar la institución del administrador. La creación de carreras está deshabilitada.</div>
     <?php endif; ?>
     <form method="post" class="row g-3">
         <input type="hidden" name="accion" value="crear">
@@ -74,7 +71,7 @@ admin_layout_header('Gestion de Carreras', 'Solo puedes crear carreras para tu i
             <input type="text" name="nombre_carrera" class="form-control" placeholder="Nombre carrera" required>
         </div>
         <div class="col-md-3">
-            <input type="text" name="codigo" class="form-control" placeholder="Codigo">
+            <input type="text" name="codigo" class="form-control" placeholder="Código">
         </div>
         <div class="col-md-3">
             <input type="text" class="form-control" value="<?= admin_e($nombreInstitucionActual) ?>" readonly>
@@ -92,8 +89,8 @@ admin_layout_header('Gestion de Carreras', 'Solo puedes crear carreras para tu i
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
-                    <th>Codigo</th>
-                    <th>Institucion</th>
+                    <th>Código</th>
+                    <th>Institución</th>
                 </tr>
             </thead>
             <tbody>
@@ -102,11 +99,10 @@ admin_layout_header('Gestion de Carreras', 'Solo puedes crear carreras para tu i
                         <td><?= (int) $carrera['id_carrera'] ?></td>
                         <td><?= admin_e($carrera['nombre_carrera']) ?></td>
                         <td><?= admin_e($carrera['codigo'] ?? '') ?></td>
-                        <td><?= admin_e($carrera['institucion'] ?? 'Sin institucion') ?></td>
+                        <td><?= admin_e($carrera['institucion'] ?? 'Sin institución') ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </div>
-<?php admin_layout_footer(); ?>

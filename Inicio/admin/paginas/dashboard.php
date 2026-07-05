@@ -1,17 +1,6 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'administrador') {
-    header('Location: ../iniciar_sesion.php');
-    exit;
-}
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
-
-$idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
-$filtroInstitucion = $idInstitucionActual > 0 ? (int) $idInstitucionActual : 0;
+// Las variables $conexion e $id_institucion ($filtroInstitucion) vienen de auth.php
+$filtroInstitucion = $id_institucion > 0 ? (int) $id_institucion : 0;
 $filtroUsuarios = $filtroInstitucion > 0
     ? "u.id_institucion = {$filtroInstitucion} AND LOWER(TRIM(r.nombre_rol)) IN ('estudiante', 'coordinador', 'directivo', 'director')"
     : "1 = 0";
@@ -64,10 +53,8 @@ LEFT JOIN directivo d ON d.id_usuario = u.id_usuario
 WHERE {$filtroUsuarios}
 ORDER BY u.id_usuario DESC
 LIMIT 5");
-
-admin_layout_header('Dashboard Administrativo', 'Resumen operativo del modulo de administracion.');
 ?>
-<?php if ($idInstitucionActual <= 0): ?>
+<?php if ($id_institucion <= 0): ?>
     <div class="alert alert-warning mb-4">
         No se pudo identificar la institución del administrador. Los indicadores se muestran vacíos hasta que vuelvas a iniciar sesión.
     </div>
@@ -82,7 +69,7 @@ admin_layout_header('Dashboard Administrativo', 'Resumen operativo del modulo de
         ['Estudiantes', $totalEstudiantes, 'bi-mortarboard', 'info'],
         ['Coordinadores', $totalCoordinadores, 'bi-diagram-3', 'danger'],
         ['Directivos', $totalDirectivos, 'bi-person-badge', 'dark'],
-        ['Practicas Activas', $practicasActivas, 'bi-briefcase', 'success'],
+        ['Prácticas Activas', $practicasActivas, 'bi-briefcase', 'success'],
     ];
     foreach ($kpis as [$label, $valor, $icono, $color]) :
     ?>
@@ -108,10 +95,10 @@ admin_layout_header('Dashboard Administrativo', 'Resumen operativo del modulo de
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h5 class="fw-bold mb-1">Ultimos usuarios registrados</h5>
-                <p class="text-muted mb-0">Vista rapida de altas recientes y su estado actual.</p>
+                <h5 class="fw-bold mb-1">Últimos usuarios registrados</h5>
+                <p class="text-muted mb-0">Vista rápida de altas recientes y su estado actual.</p>
             </div>
-            <a href="usuarios.php" class="btn btn-primary btn-sm">Gestionar usuarios</a>
+            <a href="inicio.php?pagina=usuarios" class="btn btn-primary btn-sm">Gestionar usuarios</a>
         </div>
         <div class="table-responsive">
             <table class="table align-middle">
@@ -141,4 +128,3 @@ admin_layout_header('Dashboard Administrativo', 'Resumen operativo del modulo de
         </div>
     </div>
 </div>
-<?php admin_layout_footer(); ?>

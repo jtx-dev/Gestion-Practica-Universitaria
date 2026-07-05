@@ -1,20 +1,10 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'administrador') {
-    header('Location: ../iniciar_sesion.php');
-    exit;
-}
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
+// Las variables $conexion e $id_institucion vienen de auth.php
 
 $auditoriaHabilitada = admin_table_exists($conexion, 'auditoria');
 $auditoriaLegacy = !$auditoriaHabilitada && admin_table_exists($conexion, 'logs');
 $tablaAuditoria = $auditoriaHabilitada ? 'auditoria' : ($auditoriaLegacy ? 'logs' : '');
 $auditoria = $tablaAuditoria !== '' ? admin_query_all($conexion, "SELECT a.usuario, a.accion, a.fecha, a.ip, a.modulo FROM {$tablaAuditoria} a ORDER BY a.fecha DESC LIMIT 50") : [];
-admin_layout_header('Auditoría del Sistema', 'Trazabilidad de acciones realizadas por administradores.');
 ?>
 <div class="card card-custom">
     <div class="card-body table-responsive">
@@ -24,7 +14,15 @@ admin_layout_header('Auditoría del Sistema', 'Trazabilidad de acciones realizad
             <div class="alert alert-info">Se detectó la tabla antigua <code>logs</code>. Considera migrarla a <code>auditoria</code>.</div>
         <?php endif; ?>
         <table class="table align-middle mb-0">
-            <thead><tr><th>Usuario</th><th>Accion</th><th>Fecha</th><th>IP</th><th>Modulo</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Acción</th>
+                    <th>Fecha</th>
+                    <th>IP</th>
+                    <th>Módulo</th>
+                </tr>
+            </thead>
             <tbody>
                 <?php foreach ($auditoria as $log): ?>
                     <tr>
@@ -39,4 +37,3 @@ admin_layout_header('Auditoría del Sistema', 'Trazabilidad de acciones realizad
         </table>
     </div>
 </div>
-<?php admin_layout_footer(); ?>

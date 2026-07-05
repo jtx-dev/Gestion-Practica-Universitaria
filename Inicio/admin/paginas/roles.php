@@ -1,14 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'administrador') {
-    header('Location: ../iniciar_sesion.php');
-    exit;
-}
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
+// Las variables $conexion e $id_institucion vienen de auth.php
 
 // --- MODO MANTENIMIENTO ---
 // Se ha deshabilitado la creación y modificación de roles.
@@ -19,8 +10,6 @@ $roles = [
     ['id_rol' => 3, 'nombre_rol' => 'Estudiante', 'descripcion' => 'Rol para estudiantes postulantes.', 'estado' => 'activo'],
     ['id_rol' => 4, 'nombre_rol' => 'Empresa', 'descripcion' => 'Rol para representantes de empresas ofertantes.', 'estado' => 'activo'],
 ];
-
-admin_layout_header('Gestión de Roles', 'Catálogo de roles del sistema.');
 ?>
 
 <div class="alert alert-warning" role="alert">
@@ -52,4 +41,3 @@ admin_layout_header('Gestión de Roles', 'Catálogo de roles del sistema.');
         </table>
     </div>
 </div>
-<?php admin_layout_footer(); ?>

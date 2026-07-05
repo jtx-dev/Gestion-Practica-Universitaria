@@ -1,10 +1,6 @@
 <?php
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
-
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+// Las variables $conexion e $id_institucion ($idInstitucionActual) vienen de auth.php
+$idInstitucionActual = $id_institucion;
 
 function admin_limpiar_texto_local($valor): string
 {
@@ -18,7 +14,6 @@ function admin_buscar_por_id(array $items, int $id, string $clave): ?array
             return $item;
         }
     }
-
     return null;
 }
 
@@ -70,8 +65,7 @@ function admin_traer_asignacion_por_id(mysqli $conexion, int $idAsignacion, int 
 
 $mensaje = '';
 $tipoMensaje = 'success';
-$idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
-$nombreInstitucionActual = 'Sin institucion';
+$nombreInstitucionActual = 'Sin institución';
 $asignacionesHabilitada = admin_table_exists($conexion, 'asignacion');
 $estudiantes = [];
 $coordinadores = [];
@@ -132,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? '';
 
     if ($idInstitucionActual <= 0) {
-        $mensaje = 'No se pudo identificar la institucion del administrador. Inicia sesion nuevamente.';
+        $mensaje = 'No se pudo identificar la institución del administrador. Inicia sesión nuevamente.';
         $tipoMensaje = 'danger';
     } elseif (!$asignacionesHabilitada) {
         $mensaje = 'La tabla asignacion no existe en este esquema.';
@@ -148,10 +142,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dir = admin_buscar_por_id($directivos, $idDirectivo, 'id_usuario');
 
         if (!$est || !$coor || !$dir) {
-            $mensaje = 'Selecciona estudiante, coordinador y director validos de tu institucion.';
+            $mensaje = 'Selecciona estudiante, coordinador y director válidos de tu institución.';
             $tipoMensaje = 'danger';
         } elseif ((int) $est['id_carrera'] <= 0 || (int) $coor['id_carrera'] <= 0 || (int) $dir['id_carrera'] <= 0) {
-            $mensaje = 'Todos los participantes deben tener una carrera valida.';
+            $mensaje = 'Todos los participantes deben tener una carrera válida.';
             $tipoMensaje = 'danger';
         } elseif ((int) $est['id_carrera'] !== (int) $coor['id_carrera'] || (int) $est['id_carrera'] !== (int) $dir['id_carrera']) {
             $mensaje = 'El coordinador o director no pertenece a la carrera del estudiante.';
@@ -162,38 +156,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($accion === 'crear') {
                     $stmt = mysqli_prepare($conexion, "INSERT INTO asignacion (id_estudiante, id_coordinador, id_directivo) VALUES (?, ?, ?)");
                     if (!$stmt) {
-                        throw new Exception('No se pudo preparar la asignacion.');
+                        throw new Exception('No se pudo preparar la asignación.');
                     }
                     mysqli_stmt_bind_param($stmt, 'iii', $idEstudiante, $idCoordinador, $idDirectivo);
                     if (!mysqli_stmt_execute($stmt)) {
                         throw new Exception(mysqli_stmt_error($stmt));
                     }
                     mysqli_stmt_close($stmt);
-                    $mensaje = 'Asignacion registrada correctamente.';
+                    $mensaje = 'Asignación registrada correctamente.';
                     admin_registrar_auditoria($conexion, 'Creacion de asignacion', 'asignaciones', 'Estudiante: ' . $idEstudiante . ' | Coordinador: ' . $idCoordinador . ' | Director: ' . $idDirectivo);
                 } else {
                     $asignacionActual = admin_traer_asignacion_por_id($conexion, $idAsignacion, $idInstitucionActual);
                     if (!$asignacionActual) {
-                        throw new Exception('La asignacion no existe o no pertenece a tu institucion.');
+                        throw new Exception('La asignación no existe o no pertenece a tu institución.');
                     }
 
                     $stmt = mysqli_prepare($conexion, "UPDATE asignacion SET id_estudiante = ?, id_coordinador = ?, id_directivo = ? WHERE id_asignacion = ?");
                     if (!$stmt) {
-                        throw new Exception('No se pudo preparar la actualizacion.');
+                        throw new Exception('No se pudo preparar la actualización.');
                     }
                     mysqli_stmt_bind_param($stmt, 'iiii', $idEstudiante, $idCoordinador, $idDirectivo, $idAsignacion);
                     if (!mysqli_stmt_execute($stmt)) {
                         throw new Exception(mysqli_stmt_error($stmt));
                     }
                     mysqli_stmt_close($stmt);
-                    $mensaje = 'Asignacion actualizada correctamente.';
+                    $mensaje = 'Asignación actualizada correctamente.';
                     admin_registrar_auditoria($conexion, 'Edicion de asignacion', 'asignaciones', 'ID asignacion: ' . $idAsignacion . ' | Estudiante: ' . $idEstudiante . ' | Coordinador: ' . $idCoordinador . ' | Director: ' . $idDirectivo);
                 }
 
                 mysqli_commit($conexion);
             } catch (Throwable $e) {
                 mysqli_rollback($conexion);
-                $mensaje = 'No se pudo guardar la asignacion.';
+                $mensaje = 'No se pudo guardar la asignación.';
                 $tipoMensaje = 'danger';
             }
         }
@@ -204,12 +198,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $asignacionActual = admin_traer_asignacion_por_id($conexion, $idAsignacion, $idInstitucionActual);
             if (!$asignacionActual) {
-                throw new Exception('La asignacion no existe o no pertenece a tu institucion.');
+                throw new Exception('La asignación no existe o no pertenece a tu institución.');
             }
 
             $stmt = mysqli_prepare($conexion, "DELETE FROM asignacion WHERE id_asignacion = ?");
             if (!$stmt) {
-                throw new Exception('No se pudo preparar la eliminacion.');
+                throw new Exception('No se pudo preparar la eliminación.');
             }
             mysqli_stmt_bind_param($stmt, 'i', $idAsignacion);
             if (!mysqli_stmt_execute($stmt)) {
@@ -219,10 +213,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             mysqli_commit($conexion);
             admin_registrar_auditoria($conexion, 'Eliminacion de asignacion', 'asignaciones', 'ID asignacion: ' . $idAsignacion);
-            $mensaje = 'Asignacion eliminada correctamente.';
+            $mensaje = 'Asignación eliminada correctamente.';
         } catch (Throwable $e) {
             mysqli_rollback($conexion);
-            $mensaje = 'No se pudo eliminar la asignacion.';
+            $mensaje = 'No se pudo eliminar la asignación.';
             $tipoMensaje = 'danger';
         }
     }
@@ -248,9 +242,8 @@ if ($idInstitucionActual > 0 && $asignacionesHabilitada) {
         LEFT JOIN carrera cd ON cd.id_carrera = di.id_carrera
         ORDER BY a.id_asignacion DESC");
 }
-
-admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coordinador y director.');
 ?>
+
 <?php if ($mensaje !== ''): ?>
     <div class="alert alert-<?= admin_e($tipoMensaje) ?> alert-dismissible fade show" role="alert">
         <?= admin_e($mensaje) ?>
@@ -260,16 +253,16 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
     <div>
-        <p class="text-muted mb-1">Institucion actual</p>
+        <p class="text-muted mb-1">Institución actual</p>
         <h5 class="mb-0"><?= admin_e($nombreInstitucionActual) ?></h5>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrear" <?= $idInstitucionActual <= 0 || !$asignacionesHabilitada ? 'disabled' : '' ?>>
-        <i class="bi bi-plus-circle me-2"></i>Nueva asignacion
+        <i class="bi bi-plus-circle me-2"></i>Nueva asignación
     </button>
 </div>
 
 <?php if ($idInstitucionActual <= 0): ?>
-    <div class="alert alert-warning">No se pudo identificar la institucion del administrador. La creacion y edicion de asignaciones esta deshabilitada.</div>
+    <div class="alert alert-warning">No se pudo identificar la institución del administrador. La creación y edición de asignaciones está deshabilitada.</div>
 <?php elseif (!$asignacionesHabilitada): ?>
     <div class="alert alert-warning">Este esquema no incluye la tabla <code>asignacion</code>. La pantalla queda disponible solo como referencia funcional.</div>
 <?php endif; ?>
@@ -313,7 +306,7 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
                                     Editar
                                 </button>
 
-                                <form method="post" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar esta asignacion?');">
+                                <form method="post" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar esta asignación?');">
                                     <input type="hidden" name="accion" value="eliminar">
                                     <input type="hidden" name="id_asignacion" value="<?= (int) $asignacion['id_asignacion'] ?>">
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
@@ -323,7 +316,7 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">No hay asignaciones registradas para esta institucion.</td>
+                        <td colspan="8" class="text-center text-muted py-4">No hay asignaciones registradas para esta institución.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -336,7 +329,7 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
         <div class="modal-content">
             <form method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nueva asignacion</h5>
+                    <h5 class="modal-title">Nueva asignación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
@@ -370,14 +363,14 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Institucion</label>
+                            <label class="form-label">Institución</label>
                             <input type="text" class="form-control" value="<?= admin_e($nombreInstitucionActual) ?>" readonly>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar asignacion</button>
+                    <button type="submit" class="btn btn-primary">Guardar asignación</button>
                 </div>
             </form>
         </div>
@@ -389,7 +382,7 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
         <div class="modal-content">
             <form method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title">Editar asignacion</h5>
+                    <h5 class="modal-title">Editar asignación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
@@ -424,14 +417,14 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Institucion</label>
+                            <label class="form-label">Institución</label>
                             <input type="text" class="form-control" value="<?= admin_e($nombreInstitucionActual) ?>" readonly>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Actualizar asignacion</button>
+                    <button type="submit" class="btn btn-primary">Actualizar asignación</button>
                 </div>
             </form>
         </div>
@@ -448,4 +441,3 @@ admin_layout_header('Asignaciones', 'Gestion de relaciones entre estudiante, coo
         document.getElementById('editar_id_directivo').value = boton.getAttribute('data-directivo') || '';
     });
 </script>
-<?php admin_layout_footer(); ?>

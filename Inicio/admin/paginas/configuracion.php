@@ -1,14 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['id_rol']) || strtolower($_SESSION['nombre_rol']) !== 'administrador') {
-    header('Location: ../iniciar_sesion.php');
-    exit;
-}
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
+// Las variables $conexion e $id_institucion vienen de auth.php
 
 $mensaje = '';
 $tipoMensaje = 'success';
@@ -31,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_close($stmt);
         }
     }
-    $mensaje = 'Configuracion actualizada.';
+    $mensaje = 'Configuración actualizada.';
     admin_registrar_auditoria($conexion, 'Actualizacion de configuracion', 'configuracion', 'Tiempo sesion: ' . $tiempoSesion . ' | Correo soporte: ' . $correoSoporte . ' | Estado sistema: ' . $estadoSistema);
 }
 
@@ -48,10 +39,14 @@ if ($configuracionHabilitada) {
         $config[$fila['clave']] = $fila['valor'];
     }
 }
-
-admin_layout_header('Configuracion', 'Parametros generales del modulo administrativo.');
 ?>
-<?php if ($mensaje !== ''): ?><div class="alert alert-<?= admin_e($tipoMensaje) ?>"><?= admin_e($mensaje) ?></div><?php endif; ?>
+
+<?php if ($mensaje !== ''): ?>
+    <div class="alert alert-<?= admin_e($tipoMensaje) ?> alert-dismissible fade show" role="alert">
+        <?= admin_e($mensaje) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
 <div class="card card-custom p-4">
     <?php if (!$configuracionHabilitada): ?>
@@ -59,7 +54,7 @@ admin_layout_header('Configuracion', 'Parametros generales del modulo administra
     <?php endif; ?>
     <form method="post" class="row g-3">
         <div class="col-md-4">
-            <label class="form-label">Tiempo de sesion</label>
+            <label class="form-label">Tiempo de sesión</label>
             <input type="number" name="tiempo_sesion" class="form-control" value="<?= admin_e($config['tiempo_sesion'] ?? '30') ?>">
         </div>
         <div class="col-md-4">
@@ -78,4 +73,3 @@ admin_layout_header('Configuracion', 'Parametros generales del modulo administra
         </div>
     </form>
 </div>
-<?php admin_layout_footer(); ?>

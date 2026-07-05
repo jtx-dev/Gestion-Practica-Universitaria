@@ -1,10 +1,6 @@
 <?php
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
-
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+// Las variables $conexion e $id_institucion ($idInstitucionActual) vienen de auth.php
+$idInstitucionActual = $id_institucion;
 
 function admin_limpiar_texto_local($valor): string
 {
@@ -18,7 +14,6 @@ function admin_buscar_por_id(array $items, int $id, string $clave): ?array
             return $item;
         }
     }
-
     return null;
 }
 
@@ -57,8 +52,7 @@ function admin_reiniciar_perfiles_usuario(mysqli $conexion, int $idUsuario): voi
 
 $mensaje = '';
 $tipoMensaje = 'success';
-$idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
-$nombreInstitucionActual = 'Sin institucion';
+$nombreInstitucionActual = 'Sin institución';
 $usuarios = [];
 
 if ($idInstitucionActual > 0) {
@@ -96,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? '';
 
     if ($idInstitucionActual <= 0) {
-        $mensaje = 'No se pudo identificar la institucion del administrador. Inicia sesion nuevamente.';
+        $mensaje = 'No se pudo identificar la institución del administrador. Inicia sesión nuevamente.';
         $tipoMensaje = 'danger';
     } elseif ($accion === 'crear') {
         $nombre = admin_limpiar_texto_local($_POST['nombre'] ?? '');
@@ -116,22 +110,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensaje = 'Completa todos los datos del usuario.';
             $tipoMensaje = 'danger';
         } elseif ($contrasena !== $confirmarContrasena) {
-            $mensaje = 'Las contrasenas no coinciden.';
+            $mensaje = 'Las contraseñas no coinciden.';
             $tipoMensaje = 'danger';
         } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $mensaje = 'El correo ingresado no es valido.';
+            $mensaje = 'El correo ingresado no es válido.';
             $tipoMensaje = 'danger';
         } elseif (!$rolSeleccionado) {
-            $mensaje = 'Selecciona un rol valido.';
+            $mensaje = 'Selecciona un rol válido.';
             $tipoMensaje = 'danger';
         } elseif (!admin_rol_soportado_local((string) $rolSeleccionado['nombre_rol'])) {
-            $mensaje = 'El rol seleccionado no esta habilitado en este modulo.';
+            $mensaje = 'El rol seleccionado no está habilitado en este módulo.';
             $tipoMensaje = 'danger';
         } elseif (admin_rol_requiere_carrera_local((string) $rolSeleccionado['nombre_rol']) && !$carreraSeleccionada) {
-            $mensaje = 'Debes seleccionar una carrera valida para ese rol.';
+            $mensaje = 'Debes seleccionar una carrera válida para ese rol.';
             $tipoMensaje = 'danger';
         } elseif ($carreraSeleccionada && (int) $carreraSeleccionada['id_carrera'] <= 0) {
-            $mensaje = 'La carrera seleccionada no pertenece a tu institucion.';
+            $mensaje = 'La carrera seleccionada no pertenece a tu institución.';
             $tipoMensaje = 'danger';
         } else {
             mysqli_begin_transaction($conexion);
@@ -221,25 +215,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $carreraSeleccionada = $idCarrera > 0 ? admin_buscar_por_id($carreras, $idCarrera, 'id_carrera') : null;
 
         if (!$usuarioActual) {
-            $mensaje = 'El usuario no pertenece a tu institucion o no existe.';
+            $mensaje = 'El usuario no pertenece a tu institución o no existe.';
             $tipoMensaje = 'danger';
         } elseif ($nombre === '' || $apellido === '' || $rut === '' || $correo === '') {
             $mensaje = 'Completa los campos obligatorios para editar.';
             $tipoMensaje = 'danger';
         } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $mensaje = 'El correo ingresado no es valido.';
+            $mensaje = 'El correo ingresado no es válido.';
             $tipoMensaje = 'danger';
         } elseif (!$rolSeleccionado) {
-            $mensaje = 'Selecciona un rol valido.';
+            $mensaje = 'Selecciona un rol válido.';
             $tipoMensaje = 'danger';
         } elseif (!admin_rol_soportado_local((string) $rolSeleccionado['nombre_rol'])) {
-            $mensaje = 'El rol seleccionado no esta habilitado en este modulo.';
+            $mensaje = 'El rol seleccionado no está habilitado en este módulo.';
             $tipoMensaje = 'danger';
         } elseif (admin_rol_requiere_carrera_local((string) $rolSeleccionado['nombre_rol']) && !$carreraSeleccionada) {
-            $mensaje = 'Debes seleccionar una carrera valida para ese rol.';
+            $mensaje = 'Debes seleccionar una carrera válida para ese rol.';
             $tipoMensaje = 'danger';
         } elseif ($contrasena !== '' && $contrasena !== $confirmarContrasena) {
-            $mensaje = 'Las contrasenas no coinciden.';
+            $mensaje = 'Las contraseñas no coinciden.';
             $tipoMensaje = 'danger';
         } else {
             mysqli_begin_transaction($conexion);
@@ -248,13 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $hash = password_hash($contrasena, PASSWORD_DEFAULT);
                     $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET id_rol = ?, rut = ?, correo = ?, estado_cuenta = ?, contrasena_hash = ?, id_institucion = ? WHERE id_usuario = ?");
                     if (!$stmtUsuario) {
-                        throw new Exception('No se pudo preparar la actualizacion del usuario.');
+                        throw new Exception('No se pudo preparar la actualización del usuario.');
                     }
                     mysqli_stmt_bind_param($stmtUsuario, 'issssii', $idRol, $rut, $correo, $estado, $hash, $idInstitucionActual, $idUsuario);
                 } else {
                     $stmtUsuario = mysqli_prepare($conexion, "UPDATE usuario SET id_rol = ?, rut = ?, correo = ?, estado_cuenta = ?, id_institucion = ? WHERE id_usuario = ?");
                     if (!$stmtUsuario) {
-                        throw new Exception('No se pudo preparar la actualizacion del usuario.');
+                        throw new Exception('No se pudo preparar la actualización del usuario.');
                     }
                     mysqli_stmt_bind_param($stmtUsuario, 'isssii', $idRol, $rut, $correo, $estado, $idInstitucionActual, $idUsuario);
                 }
@@ -330,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensaje = 'No se pudo cambiar el estado.';
                 $tipoMensaje = 'danger';
             }
-            mysqli_stmt_close($stmt);
+            mysqli_close($stmt);
         }
     } elseif ($accion === 'eliminar') {
         $idUsuario = (int) ($_POST['id_usuario'] ?? 0);
@@ -348,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_close($stmtValidar);
 
             if (!$usuarioValido) {
-                throw new Exception('El usuario no existe o no pertenece a tu institucion.');
+                throw new Exception('El usuario no existe o no pertenece a tu institución.');
             }
 
             $stmtClearAdmin = mysqli_prepare($conexion, "UPDATE institucion SET id_administrador = NULL WHERE id_institucion = ? AND id_administrador = ?");
@@ -362,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmtUsuario = mysqli_prepare($conexion, "DELETE FROM usuario WHERE id_usuario = ? AND id_institucion = ?");
             if (!$stmtUsuario) {
-                throw new Exception('No se pudo preparar la eliminacion.');
+                throw new Exception('No se pudo preparar la eliminación.');
             }
             mysqli_stmt_bind_param($stmtUsuario, 'ii', $idUsuario, $idInstitucionActual);
             if (!mysqli_stmt_execute($stmtUsuario)) {
@@ -405,9 +399,8 @@ if ($idInstitucionActual > 0) {
         ORDER BY u.id_usuario DESC"
     );
 }
-
-admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y eliminacion por institucion.');
 ?>
+
 <?php if ($mensaje !== ''): ?>
     <div class="alert alert-<?= admin_e($tipoMensaje) ?> alert-dismissible fade show" role="alert">
         <?= admin_e($mensaje) ?>
@@ -417,7 +410,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
     <div>
-        <p class="text-muted mb-1">Institucion actual</p>
+        <p class="text-muted mb-1">Institución actual</p>
         <h5 class="mb-0"><?= admin_e($nombreInstitucionActual) ?></h5>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrear" <?= $idInstitucionActual <= 0 ? 'disabled' : '' ?>>
@@ -426,7 +419,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
 </div>
 
 <?php if ($idInstitucionActual <= 0): ?>
-    <div class="alert alert-warning">No se pudo identificar la institucion del administrador. La creacion y edicion de usuarios esta deshabilitada.</div>
+    <div class="alert alert-warning">No se pudo identificar la institución del administrador. La creación y edición de usuarios está deshabilitada.</div>
 <?php endif; ?>
 
 <div class="card card-custom">
@@ -440,7 +433,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
                         <th>Correo</th>
                         <th>Rol</th>
                         <th>Carrera</th>
-                        <th>Fecha creacion</th>
+                        <th>Fecha creación</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -493,7 +486,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">No hay usuarios registrados para esta institucion.</td>
+                            <td colspan="8" class="text-center text-muted py-4">No hay usuarios registrados para esta institución.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -556,7 +549,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Institucion</label>
+                            <label class="form-label">Institución</label>
                             <input type="text" class="form-control" value="<?= admin_e($nombreInstitucionActual) ?>" readonly>
                         </div>
                     </div>
@@ -632,7 +625,7 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Institucion</label>
+                            <label class="form-label">Institución</label>
                             <input type="text" class="form-control" value="<?= admin_e($nombreInstitucionActual) ?>" readonly>
                         </div>
                     </div>
@@ -686,4 +679,3 @@ admin_layout_header('Gestion de Usuarios', 'Alta, edicion, cambio de estado y el
 
     ajustarCarreraSegunRol('crear_id_rol', 'crear_id_carrera');
 </script>
-<?php admin_layout_footer(); ?>

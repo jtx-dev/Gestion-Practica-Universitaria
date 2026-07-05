@@ -1,14 +1,9 @@
 <?php
-include('../../conexion.php');
-include(__DIR__ . '/includes/common.php');
-
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+// Las variables $conexion e $id_institucion ($idInstitucionActual) vienen de auth.php
+$idInstitucionActual = $id_institucion;
 
 $mensaje = '';
 $tipoMensaje = 'success';
-$idInstitucionActual = admin_obtener_id_institucion_actual($conexion);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? '';
@@ -40,8 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $carreras = admin_query_all($conexion, "SELECT id_carrera, nombre_carrera FROM carrera WHERE id_institucion = $idInstitucionActual");
 $competencias = admin_query_all($conexion, "SELECT c.*, ca.nombre_carrera FROM competencias c JOIN carrera ca ON c.id_carrera = ca.id_carrera WHERE ca.id_institucion = $idInstitucionActual ORDER BY ca.nombre_carrera, c.nombre");
-
-admin_layout_header('Mantenedor de Competencias', 'Define las etiquetas que usarán alumnos y empresas para el matching.');
 ?>
 
 <?php if ($mensaje !== ''): ?>
@@ -120,5 +113,3 @@ admin_layout_header('Mantenedor de Competencias', 'Define las etiquetas que usar
         </div>
     </div>
 </div>
-
-<?php admin_layout_footer(); ?>
