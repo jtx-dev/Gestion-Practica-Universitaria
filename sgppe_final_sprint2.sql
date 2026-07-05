@@ -1,244 +1,316 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Linux (x86_64)
 --
--- Servidor: localhost
--- Tiempo de generación: 18-06-2026 a las 19:21:45
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
+-- Host: localhost    Database: sgppe
+-- ------------------------------------------------------
+-- Server version	10.4.32-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Base de datos: `sgppe`
+-- Table structure for table `administrador`
 --
 
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `administrador`
---
-
+DROP TABLE IF EXISTS `administrador`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `administrador` (
   `id_usuario` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
-  `apellido` varchar(100) NOT NULL
+  `apellido` varchar(100) NOT NULL,
+  PRIMARY KEY (`id_usuario`),
+  CONSTRAINT `administrador_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `administrador`
+-- Dumping data for table `administrador`
 --
 
-INSERT INTO `administrador` (`id_usuario`, `nombre`, `apellido`) VALUES
-(3, 'Pedro', 'Gómez'),
-(8, 'sebastian', 'vargas');
-
--- --------------------------------------------------------
+LOCK TABLES `administrador` WRITE;
+/*!40000 ALTER TABLE `administrador` DISABLE KEYS */;
+INSERT INTO `administrador` VALUES (3,'Pedro','Gómez'),(8,'sebastian','vargas');
+/*!40000 ALTER TABLE `administrador` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `asignacion`
+-- Table structure for table `asignacion`
 --
 
+DROP TABLE IF EXISTS `asignacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `asignacion` (
-  `id_asignacion` int(11) NOT NULL,
+  `id_asignacion` int(11) NOT NULL AUTO_INCREMENT,
   `id_estudiante` int(11) NOT NULL,
   `id_coordinador` int(11) NOT NULL,
   `id_directivo` int(11) NOT NULL,
   `fecha_asignacion` timestamp NOT NULL DEFAULT current_timestamp(),
-  `estado` enum('activa','inactiva') NOT NULL DEFAULT 'activa'
+  `estado` enum('activa','inactiva') NOT NULL DEFAULT 'activa',
+  PRIMARY KEY (`id_asignacion`),
+  KEY `idx_asignacion_estudiante` (`id_estudiante`),
+  KEY `idx_asignacion_coordinador` (`id_coordinador`),
+  KEY `idx_asignacion_directivo` (`id_directivo`),
+  CONSTRAINT `asignacion_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `asignacion_ibfk_2` FOREIGN KEY (`id_coordinador`) REFERENCES `coordinador` (`id_usuario`) ON UPDATE CASCADE,
+  CONSTRAINT `asignacion_ibfk_3` FOREIGN KEY (`id_directivo`) REFERENCES `directivo` (`id_usuario`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Estructura de tabla para la tabla `asistencia`
+-- Dumping data for table `asignacion`
 --
 
+LOCK TABLES `asignacion` WRITE;
+/*!40000 ALTER TABLE `asignacion` DISABLE KEYS */;
+/*!40000 ALTER TABLE `asignacion` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `asistencia`
+--
+
+DROP TABLE IF EXISTS `asistencia`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `asistencia` (
-  `id_asistencia` int(11) NOT NULL,
+  `id_asistencia` int(11) NOT NULL AUTO_INCREMENT,
   `id_practica` int(11) NOT NULL,
   `fecha` date NOT NULL,
-  `horas_realizadas` int(11) NOT NULL
+  `horas_realizadas` int(11) NOT NULL,
+  PRIMARY KEY (`id_asistencia`),
+  KEY `id_practica` (`id_practica`),
+  CONSTRAINT `asistencia_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Estructura de tabla para la tabla `auditoria`
+-- Dumping data for table `asistencia`
 --
 
+LOCK TABLES `asistencia` WRITE;
+/*!40000 ALTER TABLE `asistencia` DISABLE KEYS */;
+/*!40000 ALTER TABLE `asistencia` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `auditoria`
+--
+
+DROP TABLE IF EXISTS `auditoria`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `auditoria` (
-  `id_auditoria` int(11) NOT NULL,
+  `id_auditoria` int(11) NOT NULL AUTO_INCREMENT,
   `usuario` varchar(255) NOT NULL,
   `accion` varchar(255) NOT NULL,
   `modulo` varchar(100) NOT NULL,
   `ip` varchar(45) DEFAULT NULL,
   `detalle` text DEFAULT NULL,
-  `fecha` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_auditoria`),
+  KEY `idx_auditoria_usuario` (`usuario`),
+  KEY `idx_auditoria_modulo` (`modulo`),
+  KEY `idx_auditoria_fecha` (`fecha`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `auditoria`
+-- Dumping data for table `auditoria`
 --
 
-INSERT INTO `auditoria` (`id_auditoria`, `usuario`, `accion`, `modulo`, `ip`, `detalle`, `fecha`) VALUES
-(1, 'admin@ucsc.cl', 'Creacion de usuario', 'usuarios', '::1', 'ID usuario: 12 | Rol: Estudiante | Institucion: 5', '2026-06-18 14:51:37'),
-(2, 'admin@ucsc.cl', 'Cambio de estado de usuario', 'usuarios', '::1', 'ID usuario: 5 | Estado: inactiva', '2026-06-18 15:18:35'),
-(3, 'admin@ucsc.cl', 'Cambio de estado de usuario', 'usuarios', '::1', 'ID usuario: 5 | Estado: activa', '2026-06-18 15:31:10'),
-(4, 'admin@ucsc.cl', 'Cambio de estado de usuario', 'usuarios', '::1', 'ID usuario: 5 | Estado: inactiva', '2026-06-18 15:33:55'),
-(5, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: inactivo', '2026-06-18 15:34:03'),
-(6, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: activo', '2026-06-18 15:34:05'),
-(7, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: inactivo', '2026-06-18 15:34:06'),
-(8, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: activo', '2026-06-18 15:34:06'),
-(9, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: inactivo', '2026-06-18 15:34:06'),
-(10, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: activo', '2026-06-18 15:34:06'),
-(11, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: inactivo', '2026-06-18 15:34:06'),
-(12, 'administrador', 'Cambio de estado de rol', 'roles', '::1', 'ID rol: 1 | Estado: activo', '2026-06-18 15:34:07'),
-(13, 'admin@ucsc.cl', 'Creacion de usuario', 'usuarios', '::1', 'ID usuario: 13 | Rol: Coordinador | Institucion: 5', '2026-06-18 15:37:12'),
-(14, 'administrador', 'Creacion de rol', 'roles', '::1', 'Rol: Directivo | Estado: activo', '2026-06-18 15:40:00'),
-(15, 'admin@ucsc.cl', 'Creacion de usuario', 'usuarios', '::1', 'ID usuario: 14 | Rol: Directivo | Institucion: 5', '2026-06-18 15:40:28');
-
--- --------------------------------------------------------
+LOCK TABLES `auditoria` WRITE;
+/*!40000 ALTER TABLE `auditoria` DISABLE KEYS */;
+INSERT INTO `auditoria` VALUES (1,'admin@ucsc.cl','Creacion de usuario','usuarios','::1','ID usuario: 12 | Rol: Estudiante | Institucion: 5','2026-06-18 14:51:37'),(2,'admin@ucsc.cl','Cambio de estado de usuario','usuarios','::1','ID usuario: 5 | Estado: inactiva','2026-06-18 15:18:35'),(3,'admin@ucsc.cl','Cambio de estado de usuario','usuarios','::1','ID usuario: 5 | Estado: activa','2026-06-18 15:31:10'),(4,'admin@ucsc.cl','Cambio de estado de usuario','usuarios','::1','ID usuario: 5 | Estado: inactiva','2026-06-18 15:33:55'),(5,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: inactivo','2026-06-18 15:34:03'),(6,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: activo','2026-06-18 15:34:05'),(7,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: inactivo','2026-06-18 15:34:06'),(8,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: activo','2026-06-18 15:34:06'),(9,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: inactivo','2026-06-18 15:34:06'),(10,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: activo','2026-06-18 15:34:06'),(11,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: inactivo','2026-06-18 15:34:06'),(12,'administrador','Cambio de estado de rol','roles','::1','ID rol: 1 | Estado: activo','2026-06-18 15:34:07'),(13,'admin@ucsc.cl','Creacion de usuario','usuarios','::1','ID usuario: 13 | Rol: Coordinador | Institucion: 5','2026-06-18 15:37:12'),(14,'administrador','Creacion de rol','roles','::1','Rol: Directivo | Estado: activo','2026-06-18 15:40:00'),(15,'admin@ucsc.cl','Creacion de usuario','usuarios','::1','ID usuario: 14 | Rol: Directivo | Institucion: 5','2026-06-18 15:40:28'),(16,'admin@ucsc.cl','Cambio de estado de usuario','usuarios','::1','ID usuario: 5 | Estado: activa','2026-07-05 20:42:16'),(17,'admin@ucsc.cl','Cambio de estado de usuario','usuarios','::1','ID usuario: 5 | Estado: inactiva','2026-07-05 20:42:17');
+/*!40000 ALTER TABLE `auditoria` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `bitacora`
+-- Table structure for table `bitacora`
 --
 
+DROP TABLE IF EXISTS `bitacora`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `bitacora` (
-  `id_bitacora` int(11) NOT NULL,
+  `id_bitacora` int(11) NOT NULL AUTO_INCREMENT,
   `id_practica` int(11) NOT NULL,
   `fecha_registro` date NOT NULL,
   `actividades` text NOT NULL,
   `logros` text DEFAULT NULL,
-  `horas_registradas` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `horas_registradas` int(11) NOT NULL,
+  PRIMARY KEY (`id_bitacora`),
+  KEY `id_practica` (`id_practica`),
+  CONSTRAINT `bitacora_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `bitacora`
+-- Dumping data for table `bitacora`
 --
 
-INSERT INTO `bitacora` (`id_bitacora`, `id_practica`, `fecha_registro`, `actividades`, `logros`, `horas_registradas`) VALUES
-(6, 1, '2026-01-02', 'actividades_test', 'logros_test', 2);
-
--- --------------------------------------------------------
+LOCK TABLES `bitacora` WRITE;
+/*!40000 ALTER TABLE `bitacora` DISABLE KEYS */;
+INSERT INTO `bitacora` VALUES (6,1,'2026-01-02','actividades_test','logros_test',2);
+/*!40000 ALTER TABLE `bitacora` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `carrera`
+-- Table structure for table `carrera`
 --
 
+DROP TABLE IF EXISTS `carrera`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `carrera` (
-  `id_carrera` int(11) NOT NULL,
+  `id_carrera` int(11) NOT NULL AUTO_INCREMENT,
   `id_institucion` int(11) NOT NULL,
   `nombre_carrera` varchar(255) NOT NULL,
-  `codigo` varchar(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `codigo` varchar(20) NOT NULL,
+  PRIMARY KEY (`id_carrera`),
+  UNIQUE KEY `codigo` (`codigo`),
+  KEY `id_institucion` (`id_institucion`),
+  CONSTRAINT `carrera_ibfk_1` FOREIGN KEY (`id_institucion`) REFERENCES `institucion` (`id_institucion`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `carrera`
+-- Dumping data for table `carrera`
 --
 
-INSERT INTO `carrera` (`id_carrera`, `id_institucion`, `nombre_carrera`, `codigo`) VALUES
-(1, 5, 'Ingeniería Civil Informática', 'INF-01'),
-(2, 5, 'Ingeniería Comercial', 'COM-01'),
-(3, 5, 'Psicología', 'PSI-01');
-
--- --------------------------------------------------------
+LOCK TABLES `carrera` WRITE;
+/*!40000 ALTER TABLE `carrera` DISABLE KEYS */;
+INSERT INTO `carrera` VALUES (1,5,'Ingeniería Civil Informática','INF-01'),(2,5,'Ingeniería Comercial','COM-01'),(3,5,'Psicología','PSI-01');
+/*!40000 ALTER TABLE `carrera` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `competencias`
+-- Table structure for table `competencias`
 --
 
+DROP TABLE IF EXISTS `competencias`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `competencias` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   `id_carrera` int(11) NOT NULL,
-  `tipo` enum('técnica','blanda') DEFAULT 'técnica'
-) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+  `tipo` enum('técnica','blanda') DEFAULT 'técnica',
+  PRIMARY KEY (`id`),
+  KEY `id_carrera` (`id_carrera`),
+  CONSTRAINT `competencias_ibfk_1` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `competencias`
+-- Dumping data for table `competencias`
 --
 
-INSERT INTO `competencias` (`id`, `nombre`, `id_carrera`, `tipo`) VALUES
-(1, 'PHP', 1, 'técnica'),
-(2, 'LARAVEL', 1, 'técnica');
-
--- --------------------------------------------------------
+LOCK TABLES `competencias` WRITE;
+/*!40000 ALTER TABLE `competencias` DISABLE KEYS */;
+INSERT INTO `competencias` VALUES (1,'PHP',1,'técnica'),(2,'LARAVEL',1,'técnica');
+/*!40000 ALTER TABLE `competencias` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `configuracion`
+-- Table structure for table `configuracion`
 --
 
+DROP TABLE IF EXISTS `configuracion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `configuracion` (
   `clave` varchar(100) NOT NULL,
   `valor` text NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
-  `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`clave`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `configuracion`
+-- Dumping data for table `configuracion`
 --
 
-INSERT INTO `configuracion` (`clave`, `valor`, `descripcion`, `actualizado_en`) VALUES
-('correo_soporte', 'soporte@sgppe.cl', 'Correo de soporte del sistema', '2026-06-18 14:39:07'),
-('estado_sistema', 'activo', 'Estado general del sistema', '2026-06-18 14:39:07'),
-('tiempo_sesion', '30', 'Tiempo de sesion en minutos', '2026-06-18 14:39:07');
-
--- --------------------------------------------------------
+LOCK TABLES `configuracion` WRITE;
+/*!40000 ALTER TABLE `configuracion` DISABLE KEYS */;
+INSERT INTO `configuracion` VALUES ('correo_soporte','soporte@sgppe.cl','Correo de soporte del sistema','2026-06-18 14:39:07'),('estado_sistema','activo','Estado general del sistema','2026-06-18 14:39:07'),('tiempo_sesion','30','Tiempo de sesion en minutos','2026-06-18 14:39:07');
+/*!40000 ALTER TABLE `configuracion` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `coordinador`
+-- Table structure for table `coordinador`
 --
 
+DROP TABLE IF EXISTS `coordinador`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `coordinador` (
   `id_usuario` int(11) NOT NULL,
   `id_carrera` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
-  `apellido` varchar(100) NOT NULL
+  `apellido` varchar(100) NOT NULL,
+  PRIMARY KEY (`id_usuario`),
+  KEY `id_carrera` (`id_carrera`),
+  CONSTRAINT `coordinador_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),
+  CONSTRAINT `coordinador_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `coordinador`
+-- Dumping data for table `coordinador`
 --
 
-INSERT INTO `coordinador` (`id_usuario`, `id_carrera`, `nombre`, `apellido`) VALUES
-(13, 1, 'coordinador', 'coordinador');
-
--- --------------------------------------------------------
+LOCK TABLES `coordinador` WRITE;
+/*!40000 ALTER TABLE `coordinador` DISABLE KEYS */;
+INSERT INTO `coordinador` VALUES (13,1,'coordinador','coordinador');
+/*!40000 ALTER TABLE `coordinador` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `directivo`
+-- Table structure for table `directivo`
 --
 
+DROP TABLE IF EXISTS `directivo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `directivo` (
   `id_usuario` int(11) NOT NULL,
   `id_carrera` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
-  `apellido` varchar(100) NOT NULL
+  `apellido` varchar(100) NOT NULL,
+  PRIMARY KEY (`id_usuario`),
+  KEY `id_carrera` (`id_carrera`),
+  CONSTRAINT `directivo_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),
+  CONSTRAINT `directivo_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `directivo`
+-- Dumping data for table `directivo`
 --
 
-INSERT INTO `directivo` (`id_usuario`, `id_carrera`, `nombre`, `apellido`) VALUES
-(14, 1, 'sebastian', 'vargas');
-
--- --------------------------------------------------------
+LOCK TABLES `directivo` WRITE;
+/*!40000 ALTER TABLE `directivo` DISABLE KEYS */;
+INSERT INTO `directivo` VALUES (14,1,'sebastian','vargas');
+/*!40000 ALTER TABLE `directivo` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `empresa`
+-- Table structure for table `empresa`
 --
 
+DROP TABLE IF EXISTS `empresa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `empresa` (
   `id_usuario` int(11) NOT NULL,
   `razon_social` varchar(255) NOT NULL,
@@ -246,23 +318,30 @@ CREATE TABLE `empresa` (
   `direccion` varchar(255) DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
   `nombre_encargado` varchar(100) DEFAULT NULL,
-  `nombre_empresa` varchar(100) NOT NULL
+  `nombre_empresa` varchar(100) NOT NULL,
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `rut_empresa` (`rut_empresa`),
+  CONSTRAINT `empresa_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `empresa`
+-- Dumping data for table `empresa`
 --
 
-INSERT INTO `empresa` (`id_usuario`, `razon_social`, `rut_empresa`, `direccion`, `telefono`, `nombre_encargado`, `nombre_empresa`) VALUES
-(5, 'Tech Solutions SPA', '76.123.456-7', 'Concepción', '412345678', 'Carlos Pérez', 'Tech Solutions'),
-(15, 'empresa spa', '76.115.412.5', 'lincoyan 940', '+56 9 7107 1530', 'Juan Perez', 'empresa spa');
-
--- --------------------------------------------------------
+LOCK TABLES `empresa` WRITE;
+/*!40000 ALTER TABLE `empresa` DISABLE KEYS */;
+INSERT INTO `empresa` VALUES (5,'Tech Solutions SPA','76.123.456-7','Concepción','412345678','Carlos Pérez','Tech Solutions'),(15,'empresa spa','76.115.412.5','lincoyan 940','+56 9 7107 1530','Juan Perez','empresa spa'),(17,'junior web sql','94439496-6','lincoyan 940','+56 9 7107 1530','Juan Perez','junior web sql');
+/*!40000 ALTER TABLE `empresa` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `estudiante`
+-- Table structure for table `estudiante`
 --
 
+DROP TABLE IF EXISTS `estudiante`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `estudiante` (
   `id_usuario` int(11) NOT NULL,
   `id_carrera` int(11) NOT NULL,
@@ -270,150 +349,235 @@ CREATE TABLE `estudiante` (
   `apellido` varchar(100) NOT NULL,
   `nivel_curricular` int(11) NOT NULL COMMENT 'Semestre o nivel de avance',
   `habilidades` text DEFAULT NULL COMMENT 'Habilidades declaradas para matching',
-  `ramos_aprobados` int(11) NOT NULL COMMENT 'Ramos aprobados, validación BR-04'
+  `ramos_aprobados` int(11) NOT NULL COMMENT 'Ramos aprobados, validación BR-04',
+  PRIMARY KEY (`id_usuario`),
+  KEY `id_carrera` (`id_carrera`),
+  CONSTRAINT `estudiante_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),
+  CONSTRAINT `estudiante_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `estudiante`
+-- Dumping data for table `estudiante`
 --
 
-INSERT INTO `estudiante` (`id_usuario`, `id_carrera`, `nombre`, `apellido`, `nivel_curricular`, `habilidades`, `ramos_aprobados`) VALUES
-(3, 1, 'Jeremy', 'Mendoza', 8, 'HTML, CSS, PHP', 35),
-(12, 1, 'sebastian', 'vargas', 1, 'LARAVEL', 0);
-
--- --------------------------------------------------------
+LOCK TABLES `estudiante` WRITE;
+/*!40000 ALTER TABLE `estudiante` DISABLE KEYS */;
+INSERT INTO `estudiante` VALUES (3,1,'Jeremy','Mendoza',8,'HTML, CSS, PHP',35),(12,1,'sebastian','vargas',1,'LARAVEL',0);
+/*!40000 ALTER TABLE `estudiante` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `estudiante_competencias`
+-- Table structure for table `estudiante_competencias`
 --
 
+DROP TABLE IF EXISTS `estudiante_competencias`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `estudiante_competencias` (
   `id_estudiante` int(11) NOT NULL,
-  `id_competencia` int(11) NOT NULL
+  `id_competencia` int(11) NOT NULL,
+  PRIMARY KEY (`id_estudiante`,`id_competencia`),
+  KEY `id_competencia` (`id_competencia`),
+  CONSTRAINT `estudiante_competencias_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`) ON DELETE CASCADE,
+  CONSTRAINT `estudiante_competencias_ibfk_2` FOREIGN KEY (`id_competencia`) REFERENCES `competencias` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `estudiante_competencias`
+-- Dumping data for table `estudiante_competencias`
 --
 
-INSERT INTO `estudiante_competencias` (`id_estudiante`, `id_competencia`) VALUES
-(12, 2);
-
--- --------------------------------------------------------
+LOCK TABLES `estudiante_competencias` WRITE;
+/*!40000 ALTER TABLE `estudiante_competencias` DISABLE KEYS */;
+INSERT INTO `estudiante_competencias` VALUES (12,2);
+/*!40000 ALTER TABLE `estudiante_competencias` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `evaluacion`
+-- Table structure for table `evaluacion`
 --
 
+DROP TABLE IF EXISTS `evaluacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `evaluacion` (
-  `id_evaluacion` int(11) NOT NULL,
+  `id_evaluacion` int(11) NOT NULL AUTO_INCREMENT,
   `id_practica` int(11) NOT NULL,
   `id_bitacora` int(11) NOT NULL,
   `nota_final` decimal(4,1) NOT NULL,
   `comentarios` text DEFAULT NULL,
-  `fecha_evaluacion` date NOT NULL
+  `fecha_evaluacion` date NOT NULL,
+  PRIMARY KEY (`id_evaluacion`),
+  KEY `id_practica` (`id_practica`),
+  KEY `id_bitacora` (`id_bitacora`),
+  CONSTRAINT `evaluacion_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`),
+  CONSTRAINT `evaluacion_ibfk_2` FOREIGN KEY (`id_bitacora`) REFERENCES `bitacora` (`id_bitacora`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Estructura de tabla para la tabla `evaluacion_empresa`
+-- Dumping data for table `evaluacion`
 --
 
+LOCK TABLES `evaluacion` WRITE;
+/*!40000 ALTER TABLE `evaluacion` DISABLE KEYS */;
+/*!40000 ALTER TABLE `evaluacion` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `evaluacion_empresa`
+--
+
+DROP TABLE IF EXISTS `evaluacion_empresa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `evaluacion_empresa` (
-  `id_evaluacion_empresa` int(11) NOT NULL,
+  `id_evaluacion_empresa` int(11) NOT NULL AUTO_INCREMENT,
   `id_practica` int(11) NOT NULL,
   `id_estudiante` int(11) NOT NULL,
   `nota_final` decimal(4,1) NOT NULL,
   `comentarios` text DEFAULT NULL,
-  `fecha_evaluacion` date NOT NULL
+  `fecha_evaluacion` date NOT NULL,
+  PRIMARY KEY (`id_evaluacion_empresa`),
+  KEY `id_practica` (`id_practica`),
+  KEY `id_estudiante` (`id_estudiante`),
+  CONSTRAINT `evaluacion_empresa_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`),
+  CONSTRAINT `evaluacion_empresa_ibfk_2` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Estructura de tabla para la tabla `institucion`
+-- Dumping data for table `evaluacion_empresa`
 --
 
+LOCK TABLES `evaluacion_empresa` WRITE;
+/*!40000 ALTER TABLE `evaluacion_empresa` DISABLE KEYS */;
+/*!40000 ALTER TABLE `evaluacion_empresa` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `institucion`
+--
+
+DROP TABLE IF EXISTS `institucion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `institucion` (
-  `id_institucion` int(11) NOT NULL COMMENT 'Identificador de la institucion',
+  `id_institucion` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Identificador de la institucion',
   `nombre` varchar(255) NOT NULL COMMENT 'Nombre de la institución.',
   `logo_institucion` varchar(500) DEFAULT NULL COMMENT 'Logo asociado a la institución participante.',
   `estado_institucion` enum('activa','inactiva') NOT NULL DEFAULT 'activa' COMMENT 'Estado de la institución en el sistema.',
-  `id_administrador` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Institucion participante del sistema de gestion de prácticas';
+  `id_administrador` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id_institucion`),
+  UNIQUE KEY `Institucion_unique` (`nombre`),
+  KEY `fk_institucion_administrador` (`id_administrador`),
+  CONSTRAINT `fk_institucion_administrador` FOREIGN KEY (`id_administrador`) REFERENCES `administrador` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Institucion participante del sistema de gestion de prácticas';
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `institucion`
+-- Dumping data for table `institucion`
 --
 
-INSERT INTO `institucion` (`id_institucion`, `nombre`, `logo_institucion`, `estado_institucion`, `id_administrador`) VALUES
-(5, 'Universidad católica de la santísima Concepción', 'https://upload.wikimedia.org/wikipedia/commons/7/7a/UCSC%2C_Universidad_Cat%C3%B3lica_de_la_Sant%C3%ADsima_Concepci%C3%B3n.png', 'activa', 8);
-
--- --------------------------------------------------------
+LOCK TABLES `institucion` WRITE;
+/*!40000 ALTER TABLE `institucion` DISABLE KEYS */;
+INSERT INTO `institucion` VALUES (5,'Universidad católica de la santísima Concepción','https://upload.wikimedia.org/wikipedia/commons/7/7a/UCSC%2C_Universidad_Cat%C3%B3lica_de_la_Sant%C3%ADsima_Concepci%C3%B3n.png','activa',8);
+/*!40000 ALTER TABLE `institucion` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `intentos_envio`
+-- Table structure for table `intentos_envio`
 --
 
+DROP TABLE IF EXISTS `intentos_envio`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `intentos_envio` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `ip_usuario` varchar(45) DEFAULT NULL,
-  `fecha_intento` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+  `fecha_intento` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `intentos_envio`
+-- Dumping data for table `intentos_envio`
 --
 
-INSERT INTO `intentos_envio` (`id`, `ip_usuario`, `fecha_intento`) VALUES
-(26, '::1', '2026-06-18 15:22:43'),
-(27, '::1', '2026-06-18 15:28:08'),
-(28, '::1', '2026-06-18 15:50:13');
-
--- --------------------------------------------------------
+LOCK TABLES `intentos_envio` WRITE;
+/*!40000 ALTER TABLE `intentos_envio` DISABLE KEYS */;
+INSERT INTO `intentos_envio` VALUES (26,'::1','2026-06-18 15:22:43'),(27,'::1','2026-06-18 15:28:08'),(28,'::1','2026-06-18 15:50:13'),(29,'::1','2026-07-05 20:44:12');
+/*!40000 ALTER TABLE `intentos_envio` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `notificacion`
+-- Table structure for table `notificacion`
 --
 
+DROP TABLE IF EXISTS `notificacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `notificacion` (
-  `id_notificacion` int(11) NOT NULL,
+  `id_notificacion` int(11) NOT NULL AUTO_INCREMENT,
   `id_usuario` int(11) NOT NULL,
   `titulo` varchar(255) NOT NULL,
   `mensaje` text NOT NULL,
   `fecha_envio` timestamp NOT NULL DEFAULT current_timestamp(),
   `leida` tinyint(1) NOT NULL DEFAULT 0,
-  `tipo_evento` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+  `tipo_evento` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id_notificacion`),
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `notificacion_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Estructura de tabla para la tabla `oferta_competencias`
+-- Dumping data for table `notificacion`
 --
 
+LOCK TABLES `notificacion` WRITE;
+/*!40000 ALTER TABLE `notificacion` DISABLE KEYS */;
+INSERT INTO `notificacion` VALUES (1,12,'¡Práctica Recomendada!','Tu coordinador te recomienda revisar la oferta: \'24234sd\'. Tu perfil hace match con lo que buscan.','2026-07-05 20:45:23',1,'recomendacion');
+/*!40000 ALTER TABLE `notificacion` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `oferta_competencias`
+--
+
+DROP TABLE IF EXISTS `oferta_competencias`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `oferta_competencias` (
   `id_oferta` int(11) NOT NULL,
-  `id_competencia` int(11) NOT NULL
+  `id_competencia` int(11) NOT NULL,
+  PRIMARY KEY (`id_oferta`,`id_competencia`),
+  KEY `id_competencia` (`id_competencia`),
+  CONSTRAINT `oferta_competencias_ibfk_1` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`) ON DELETE CASCADE,
+  CONSTRAINT `oferta_competencias_ibfk_2` FOREIGN KEY (`id_competencia`) REFERENCES `competencias` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COLLATE=utf32_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `oferta_competencias`
+-- Dumping data for table `oferta_competencias`
 --
 
-INSERT INTO `oferta_competencias` (`id_oferta`, `id_competencia`) VALUES
-(3, 1),
-(3, 2);
-
--- --------------------------------------------------------
+LOCK TABLES `oferta_competencias` WRITE;
+/*!40000 ALTER TABLE `oferta_competencias` DISABLE KEYS */;
+INSERT INTO `oferta_competencias` VALUES (3,1),(3,2),(4,1);
+/*!40000 ALTER TABLE `oferta_competencias` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `oferta_practica`
+-- Table structure for table `oferta_practica`
 --
 
+DROP TABLE IF EXISTS `oferta_practica`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `oferta_practica` (
-  `id_oferta` int(11) NOT NULL,
+  `id_oferta` int(11) NOT NULL AUTO_INCREMENT,
   `id_carrera` int(11) NOT NULL,
   `id_empresa` int(11) NOT NULL,
   `titulo` varchar(255) NOT NULL,
@@ -423,48 +587,66 @@ CREATE TABLE `oferta_practica` (
   `duracion_meses` int(11) NOT NULL,
   `estado_oferta` enum('pendiente_aprobacion','activa','rechazada','pausada','cerrada') NOT NULL DEFAULT 'pendiente_aprobacion',
   `fecha_publicacion` timestamp NOT NULL DEFAULT current_timestamp(),
-  `fecha_cierre` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `fecha_cierre` date DEFAULT NULL,
+  PRIMARY KEY (`id_oferta`),
+  KEY `id_carrera` (`id_carrera`),
+  KEY `id_empresa` (`id_empresa`),
+  CONSTRAINT `oferta_practica_ibfk_1` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`),
+  CONSTRAINT `oferta_practica_ibfk_2` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `oferta_practica`
+-- Dumping data for table `oferta_practica`
 --
 
-INSERT INTO `oferta_practica` (`id_oferta`, `id_carrera`, `id_empresa`, `titulo`, `descripcion`, `requisitos`, `cupos`, `duracion_meses`, `estado_oferta`, `fecha_publicacion`, `fecha_cierre`) VALUES
-(2, 1, 5, 'Desarrollador Web Junior', 'Apoyo en desarrollo web', 'PHP, HTML, CSS y MySQL', 3, 6, 'rechazada', '2026-06-16 21:40:34', NULL),
-(3, 1, 15, '24234sd', 'asdikjasdunbhjasnubh', 'Ver etiquetas de competencias', 0, 3, 'cerrada', '2026-06-18 15:50:13', NULL);
-
--- --------------------------------------------------------
+LOCK TABLES `oferta_practica` WRITE;
+/*!40000 ALTER TABLE `oferta_practica` DISABLE KEYS */;
+INSERT INTO `oferta_practica` VALUES (2,1,5,'Desarrollador Web Junior','Apoyo en desarrollo web','PHP, HTML, CSS y MySQL',3,6,'rechazada','2026-06-16 21:40:34',NULL),(3,1,15,'24234sd','asdikjasdunbhjasnubh','Ver etiquetas de competencias',1,3,'activa','2026-06-18 15:50:13',NULL),(4,1,17,'asdasd','asd','Ver etiquetas de competencias',5,3,'activa','2026-07-05 20:44:12',NULL);
+/*!40000 ALTER TABLE `oferta_practica` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `postulacion`
+-- Table structure for table `postulacion`
 --
 
+DROP TABLE IF EXISTS `postulacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `postulacion` (
-  `id_postulacion` int(11) NOT NULL,
+  `id_postulacion` int(11) NOT NULL AUTO_INCREMENT,
   `id_estudiante` int(11) NOT NULL,
   `id_oferta` int(11) NOT NULL,
   `fecha_postulacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `estado_postulacion` enum('espera','aceptada','rechazada') NOT NULL DEFAULT 'espera',
-  `cv_estudiante` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `cv_estudiante` varchar(255) NOT NULL,
+  PRIMARY KEY (`id_postulacion`),
+  KEY `id_estudiante` (`id_estudiante`),
+  KEY `id_oferta` (`id_oferta`),
+  CONSTRAINT `postulacion_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`),
+  CONSTRAINT `postulacion_ibfk_2` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `postulacion`
+-- Dumping data for table `postulacion`
 --
 
-INSERT INTO `postulacion` (`id_postulacion`, `id_estudiante`, `id_oferta`, `fecha_postulacion`, `estado_postulacion`, `cv_estudiante`) VALUES
-(3, 3, 2, '2026-06-17 07:10:35', 'espera', 'cv.pdf'),
-(6, 12, 3, '2026-06-18 15:57:33', 'espera', 'cv.pdf');
-
--- --------------------------------------------------------
+LOCK TABLES `postulacion` WRITE;
+/*!40000 ALTER TABLE `postulacion` DISABLE KEYS */;
+INSERT INTO `postulacion` VALUES (3,3,2,'2026-06-17 07:10:35','espera','cv.pdf');
+/*!40000 ALTER TABLE `postulacion` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `practica`
+-- Table structure for table `practica`
 --
 
+DROP TABLE IF EXISTS `practica`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `practica` (
-  `id_practica` int(11) NOT NULL,
+  `id_practica` int(11) NOT NULL AUTO_INCREMENT,
   `id_estudiante` int(11) NOT NULL,
   `id_oferta` int(11) NOT NULL,
   `id_coordinador` int(11) DEFAULT NULL,
@@ -473,61 +655,93 @@ CREATE TABLE `practica` (
   `fecha_inicio` date NOT NULL,
   `fecha_termino` date DEFAULT NULL,
   `horas_totales` int(11) DEFAULT NULL,
-  `nota_final` decimal(4,1) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `nota_final` decimal(4,1) DEFAULT NULL,
+  PRIMARY KEY (`id_practica`),
+  KEY `id_estudiante` (`id_estudiante`),
+  KEY `id_oferta` (`id_oferta`),
+  KEY `id_coordinador` (`id_coordinador`),
+  KEY `id_directivo` (`id_directivo`),
+  CONSTRAINT `practica_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`),
+  CONSTRAINT `practica_ibfk_2` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`),
+  CONSTRAINT `practica_ibfk_3` FOREIGN KEY (`id_coordinador`) REFERENCES `coordinador` (`id_usuario`),
+  CONSTRAINT `practica_ibfk_4` FOREIGN KEY (`id_directivo`) REFERENCES `directivo` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `practica`
+-- Dumping data for table `practica`
 --
 
-INSERT INTO `practica` (`id_practica`, `id_estudiante`, `id_oferta`, `id_coordinador`, `id_directivo`, `estado_practica`, `fecha_inicio`, `fecha_termino`, `horas_totales`, `nota_final`) VALUES
-(1, 3, 2, NULL, NULL, 'postulado', '2026-06-17', NULL, NULL, NULL);
-
--- --------------------------------------------------------
+LOCK TABLES `practica` WRITE;
+/*!40000 ALTER TABLE `practica` DISABLE KEYS */;
+INSERT INTO `practica` VALUES (1,3,2,NULL,NULL,'postulado','2026-06-17',NULL,NULL,NULL);
+/*!40000 ALTER TABLE `practica` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `rol`
+-- Table structure for table `rol`
 --
 
+DROP TABLE IF EXISTS `rol`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `rol` (
-  `id_rol` int(11) NOT NULL COMMENT 'Identificador único del rol asignado al usuario',
+  `id_rol` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del rol asignado al usuario',
   `descripcion` varchar(255) DEFAULT NULL COMMENT 'Descripción asociado al rol.',
   `nombre_rol` varchar(50) NOT NULL COMMENT 'Nombre del rol.',
-  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo' COMMENT 'Estado del rol'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Rol asociado al usuario pensado como mantenedor';
+  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo' COMMENT 'Estado del rol',
+  PRIMARY KEY (`id_rol`),
+  UNIQUE KEY `Rol_unique` (`nombre_rol`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Rol asociado al usuario pensado como mantenedor';
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `rol`
+-- Dumping data for table `rol`
 --
 
-INSERT INTO `rol` (`id_rol`, `descripcion`, `nombre_rol`, `estado`) VALUES
-(1, 'Administrador de la institución', 'Administrador', 'activo'),
-(2, 'Coordinador de prácticas', 'Coordinador', 'activo'),
-(3, 'Empresa externa', 'Empresa', 'activo'),
-(4, 'Alumno en práctica', 'Estudiante', 'activo'),
-(5, 'permite ver todo el dashboard', 'Directivo', 'activo');
-
--- --------------------------------------------------------
+LOCK TABLES `rol` WRITE;
+/*!40000 ALTER TABLE `rol` DISABLE KEYS */;
+INSERT INTO `rol` VALUES (1,'Administrador de la institución','Administrador','activo'),(2,'Coordinador de prácticas','Coordinador','activo'),(3,'Empresa externa','Empresa','activo'),(4,'Alumno en práctica','Estudiante','activo'),(5,'permite ver todo el dashboard','Directivo','activo'),(6,'Acceso global a instituciones y administradores.','Super Administrador','activo');
+/*!40000 ALTER TABLE `rol` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Estructura de tabla para la tabla `superadministrador`
+-- Table structure for table `superadministrador`
 --
 
+DROP TABLE IF EXISTS `superadministrador`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `superadministrador` (
   `id_usuario` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `apellido` varchar(100) NOT NULL,
-  `rut` varchar(12) DEFAULT NULL
+  `rut` varchar(12) DEFAULT NULL,
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `rut_unique` (`rut`),
+  CONSTRAINT `superadministrador_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Estructura de tabla para la tabla `usuario`
+-- Dumping data for table `superadministrador`
 --
 
+LOCK TABLES `superadministrador` WRITE;
+/*!40000 ALTER TABLE `superadministrador` DISABLE KEYS */;
+INSERT INTO `superadministrador` VALUES (18,'Super','Admin','99.999.999-9');
+/*!40000 ALTER TABLE `superadministrador` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `usuario`
+--
+
+DROP TABLE IF EXISTS `usuario`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `usuario` (
-  `id_usuario` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL AUTO_INCREMENT,
   `id_rol` int(11) NOT NULL,
   `id_institucion` int(11) DEFAULT NULL,
   `rut` varchar(12) NOT NULL,
@@ -535,484 +749,76 @@ CREATE TABLE `usuario` (
   `contrasena_hash` varchar(255) NOT NULL,
   `estado_cuenta` enum('activa','inactiva') NOT NULL DEFAULT 'activa',
   `ultimo_acceso` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `rut` (`rut`),
+  UNIQUE KEY `correo` (`correo`),
+  KEY `id_rol` (`id_rol`),
+  KEY `id_institucion` (`id_institucion`),
+  CONSTRAINT `usuario_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `rol` (`id_rol`),
+  CONSTRAINT `usuario_ibfk_2` FOREIGN KEY (`id_institucion`) REFERENCES `institucion` (`id_institucion`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Volcado de datos para la tabla `usuario`
+-- Dumping data for table `usuario`
 --
 
-INSERT INTO `usuario` (`id_usuario`, `id_rol`, `id_institucion`, `rut`, `correo`, `contrasena_hash`, `estado_cuenta`, `ultimo_acceso`, `fecha_creacion`) VALUES
-(3, 1, 5, '16.222.222-1', 'pgomez@admin.com', '$2y$10$ZhHD/FG4phU3bdjdliUqx.UlAV2zwwGY68SEqWyHdzzG6gU2hVety', 'activa', '2026-06-16 01:25:36', '2026-06-16 01:24:41'),
-(5, 3, 5, '11.111.111-1', 'empresa@test.cl', '123456', 'inactiva', '2026-06-18 15:33:55', '2026-06-16 21:30:09'),
-(8, 1, 5, '191643690', 'admin@ucsc.cl', '$2y$10$9qYjlfySb9LQaWl0aNTymO96bR.HAdK7w7N5D9pZkOJHBC90ehE.W', 'activa', '2026-06-18 14:46:36', '2026-06-18 14:46:36'),
-(12, 4, 5, '211428058', 'svargasn@ing.ucsc.cl', '$2y$10$ctsO13cKyHL8PhI3QL/UuuSiPUFZVT5YupU55kBwUgVtS4aHR9ZtS', 'activa', '2026-06-18 14:51:37', '2026-06-18 14:51:37'),
-(13, 2, 5, '97034168', 'coord@coord.cl', '$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO', 'activa', '2026-06-18 15:37:12', '2026-06-18 15:37:12'),
-(14, 5, 5, '55782520', 'directivo@directivo.cl', '$2y$10$2pNVV99bynwzOj2i455mLu1xCdkgooxMxJZw5CTHJXdTKfXJr29am', 'activa', '2026-06-18 15:40:28', '2026-06-18 15:40:28'),
-(15, 3, 5, '76.115.412.5', 'aq@aasd.cl', '$2y$10$lvwTP5XH2z5QnCflTRrFpeqibhNLOPYyK7x7Zg92fUNDyqHJgV4Fm', 'activa', '2026-06-18 15:50:13', '2026-06-18 15:50:13');
-
---
--- Disparadores `usuario`
---
-DELIMITER $$
-CREATE TRIGGER `trg_usuario_bi_institucion` BEFORE INSERT ON `usuario` FOR EACH ROW BEGIN
+LOCK TABLES `usuario` WRITE;
+/*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
+INSERT INTO `usuario` VALUES (3,1,5,'16.222.222-1','pgomez@admin.com','$2y$10$ZhHD/FG4phU3bdjdliUqx.UlAV2zwwGY68SEqWyHdzzG6gU2hVety','activa','2026-06-16 01:25:36','2026-06-16 01:24:41'),(5,3,5,'11.111.111-1','empresa@test.cl','123456','inactiva','2026-07-05 20:42:17','2026-06-16 21:30:09'),(8,1,5,'191643690','admin@ucsc.cl','$2y$10$9qYjlfySb9LQaWl0aNTymO96bR.HAdK7w7N5D9pZkOJHBC90ehE.W','activa','2026-06-18 14:46:36','2026-06-18 14:46:36'),(12,4,5,'211428058','svargasn@ing.ucsc.cl','$2y$10$ctsO13cKyHL8PhI3QL/UuuSiPUFZVT5YupU55kBwUgVtS4aHR9ZtS','activa','2026-06-18 14:51:37','2026-06-18 14:51:37'),(13,2,5,'97034168','coord@coord.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-06-18 15:37:12','2026-06-18 15:37:12'),(14,5,5,'55782520','directivo@directivo.cl','$2y$10$2pNVV99bynwzOj2i455mLu1xCdkgooxMxJZw5CTHJXdTKfXJr29am','activa','2026-06-18 15:40:28','2026-06-18 15:40:28'),(15,3,5,'76.115.412.5','aq@aasd.cl','$2y$10$lvwTP5XH2z5QnCflTRrFpeqibhNLOPYyK7x7Zg92fUNDyqHJgV4Fm','activa','2026-06-18 15:50:13','2026-06-18 15:50:13'),(17,3,5,'94439496-6','as@asa.cs','$2y$10$1RPrZmTT.N4z0.H61GAjFeRb2DYyBq8asvr4fa.PZnCTORtJF1Yrm','activa','2026-07-05 20:44:12','2026-07-05 20:44:12'),(18,6,5,'99.999.999-9','superadmin@sgppe.cl','$2y$10$PIi0ft/nKYjvAY4Dr6zmnuZ3tepTN51LVZnsVzWo80oKV1NdKaJWG','activa','2026-07-05 21:11:02','2026-07-05 21:11:02');
+/*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER sgppe.trg_usuario_bi_institucion BEFORE INSERT ON sgppe.usuario FOR EACH ROW BEGIN
          DECLARE rol_admin INT;
         SELECT id_rol INTO rol_admin FROM rol WHERE nombre_rol = 'Administrador' LIMIT 1;
        IF NEW.id_rol <> rol_admin AND NEW.id_institucion IS NULL THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'id_institucion no puede ser NULL para este rol';
         END IF;
-    END
-$$
+    END */;;
 DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `trg_usuario_bu_institucion` BEFORE UPDATE ON `usuario` FOR EACH ROW BEGIN
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER sgppe.trg_usuario_bu_institucion BEFORE UPDATE ON sgppe.usuario FOR EACH ROW BEGIN
        DECLARE rol_admin INT;
         SELECT id_rol INTO rol_admin FROM rol WHERE nombre_rol = 'Administrador' LIMIT 1;
         IF NEW.id_rol <> rol_admin AND NEW.id_institucion IS NULL THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'id_institucion no puede ser NULL para este rol';
         END IF;
-    END
-$$
+    END */;;
 DELIMITER ;
-
---
--- Índices para tablas volcadas
---
-
---
--- Indices de la tabla `administrador`
---
-ALTER TABLE `administrador`
-  ADD PRIMARY KEY (`id_usuario`);
-
---
--- Indices de la tabla `asignacion`
---
-ALTER TABLE `asignacion`
-  ADD PRIMARY KEY (`id_asignacion`),
-  ADD KEY `idx_asignacion_estudiante` (`id_estudiante`),
-  ADD KEY `idx_asignacion_coordinador` (`id_coordinador`),
-  ADD KEY `idx_asignacion_directivo` (`id_directivo`);
-
---
--- Indices de la tabla `asistencia`
---
-ALTER TABLE `asistencia`
-  ADD PRIMARY KEY (`id_asistencia`),
-  ADD KEY `id_practica` (`id_practica`);
-
---
--- Indices de la tabla `auditoria`
---
-ALTER TABLE `auditoria`
-  ADD PRIMARY KEY (`id_auditoria`),
-  ADD KEY `idx_auditoria_usuario` (`usuario`),
-  ADD KEY `idx_auditoria_modulo` (`modulo`),
-  ADD KEY `idx_auditoria_fecha` (`fecha`);
-
---
--- Indices de la tabla `bitacora`
---
-ALTER TABLE `bitacora`
-  ADD PRIMARY KEY (`id_bitacora`),
-  ADD KEY `id_practica` (`id_practica`);
-
---
--- Indices de la tabla `carrera`
---
-ALTER TABLE `carrera`
-  ADD PRIMARY KEY (`id_carrera`),
-  ADD UNIQUE KEY `codigo` (`codigo`),
-  ADD KEY `id_institucion` (`id_institucion`);
-
---
--- Indices de la tabla `competencias`
---
-ALTER TABLE `competencias`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_carrera` (`id_carrera`);
-
---
--- Indices de la tabla `configuracion`
---
-ALTER TABLE `configuracion`
-  ADD PRIMARY KEY (`clave`);
-
---
--- Indices de la tabla `coordinador`
---
-ALTER TABLE `coordinador`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD KEY `id_carrera` (`id_carrera`);
-
---
--- Indices de la tabla `directivo`
---
-ALTER TABLE `directivo`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD KEY `id_carrera` (`id_carrera`);
-
---
--- Indices de la tabla `empresa`
---
-ALTER TABLE `empresa`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `rut_empresa` (`rut_empresa`);
-
---
--- Indices de la tabla `estudiante`
---
-ALTER TABLE `estudiante`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD KEY `id_carrera` (`id_carrera`);
-
---
--- Indices de la tabla `estudiante_competencias`
---
-ALTER TABLE `estudiante_competencias`
-  ADD PRIMARY KEY (`id_estudiante`,`id_competencia`),
-  ADD KEY `id_competencia` (`id_competencia`);
-
---
--- Indices de la tabla `evaluacion`
---
-ALTER TABLE `evaluacion`
-  ADD PRIMARY KEY (`id_evaluacion`),
-  ADD KEY `id_practica` (`id_practica`),
-  ADD KEY `id_bitacora` (`id_bitacora`);
-
---
--- Indices de la tabla `evaluacion_empresa`
---
-ALTER TABLE `evaluacion_empresa`
-  ADD PRIMARY KEY (`id_evaluacion_empresa`),
-  ADD KEY `id_practica` (`id_practica`),
-  ADD KEY `id_estudiante` (`id_estudiante`);
-
---
--- Indices de la tabla `institucion`
---
-ALTER TABLE `institucion`
-  ADD PRIMARY KEY (`id_institucion`),
-  ADD UNIQUE KEY `Institucion_unique` (`nombre`),
-  ADD KEY `fk_institucion_administrador` (`id_administrador`);
-
---
--- Indices de la tabla `intentos_envio`
---
-ALTER TABLE `intentos_envio`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `notificacion`
---
-ALTER TABLE `notificacion`
-  ADD PRIMARY KEY (`id_notificacion`),
-  ADD KEY `id_usuario` (`id_usuario`);
-
---
--- Indices de la tabla `oferta_competencias`
---
-ALTER TABLE `oferta_competencias`
-  ADD PRIMARY KEY (`id_oferta`,`id_competencia`),
-  ADD KEY `id_competencia` (`id_competencia`);
-
---
--- Indices de la tabla `oferta_practica`
---
-ALTER TABLE `oferta_practica`
-  ADD PRIMARY KEY (`id_oferta`),
-  ADD KEY `id_carrera` (`id_carrera`),
-  ADD KEY `id_empresa` (`id_empresa`);
-
---
--- Indices de la tabla `postulacion`
---
-ALTER TABLE `postulacion`
-  ADD PRIMARY KEY (`id_postulacion`),
-  ADD KEY `id_estudiante` (`id_estudiante`),
-  ADD KEY `id_oferta` (`id_oferta`);
-
---
--- Indices de la tabla `practica`
---
-ALTER TABLE `practica`
-  ADD PRIMARY KEY (`id_practica`),
-  ADD KEY `id_estudiante` (`id_estudiante`),
-  ADD KEY `id_oferta` (`id_oferta`),
-  ADD KEY `id_coordinador` (`id_coordinador`),
-  ADD KEY `id_directivo` (`id_directivo`);
-
---
--- Indices de la tabla `rol`
---
-ALTER TABLE `rol`
-  ADD PRIMARY KEY (`id_rol`),
-  ADD UNIQUE KEY `Rol_unique` (`nombre_rol`);
-
---
--- Indices de la tabla `superadministrador`
---
-ALTER TABLE `superadministrador`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `rut_unique` (`rut`);
-
---
--- Indices de la tabla `usuario`
---
-ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `rut` (`rut`),
-  ADD UNIQUE KEY `correo` (`correo`),
-  ADD KEY `id_rol` (`id_rol`),
-  ADD KEY `id_institucion` (`id_institucion`);
-
---
--- AUTO_INCREMENT de las tablas volcadas
---
-
---
--- AUTO_INCREMENT de la tabla `asignacion`
---
-ALTER TABLE `asignacion`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `asistencia`
---
-ALTER TABLE `asistencia`
-  MODIFY `id_asistencia` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `auditoria`
---
-ALTER TABLE `auditoria`
-  MODIFY `id_auditoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- AUTO_INCREMENT de la tabla `bitacora`
---
-ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT de la tabla `carrera`
---
-ALTER TABLE `carrera`
-  MODIFY `id_carrera` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT de la tabla `competencias`
---
-ALTER TABLE `competencias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de la tabla `evaluacion`
---
-ALTER TABLE `evaluacion`
-  MODIFY `id_evaluacion` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `evaluacion_empresa`
---
-ALTER TABLE `evaluacion_empresa`
-  MODIFY `id_evaluacion_empresa` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `institucion`
---
-ALTER TABLE `institucion`
-  MODIFY `id_institucion` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Identificador de la institucion', AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT de la tabla `intentos_envio`
---
-ALTER TABLE `intentos_envio`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
-
---
--- AUTO_INCREMENT de la tabla `notificacion`
---
-ALTER TABLE `notificacion`
-  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `oferta_practica`
---
-ALTER TABLE `oferta_practica`
-  MODIFY `id_oferta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de la tabla `postulacion`
---
-ALTER TABLE `postulacion`
-  MODIFY `id_postulacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT de la tabla `practica`
---
-ALTER TABLE `practica`
-  MODIFY `id_practica` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT de la tabla `rol`
---
-ALTER TABLE `rol`
-  MODIFY `id_rol` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del rol asignado al usuario', AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT de la tabla `usuario`
---
-ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- Restricciones para tablas volcadas
---
-
---
--- Filtros para la tabla `administrador`
---
-ALTER TABLE `administrador`
-  ADD CONSTRAINT `administrador_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
-
---
--- Filtros para la tabla `asignacion`
---
-ALTER TABLE `asignacion`
-  ADD CONSTRAINT `asignacion_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `asignacion_ibfk_2` FOREIGN KEY (`id_coordinador`) REFERENCES `coordinador` (`id_usuario`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `asignacion_ibfk_3` FOREIGN KEY (`id_directivo`) REFERENCES `directivo` (`id_usuario`) ON UPDATE CASCADE;
-
---
--- Filtros para la tabla `asistencia`
---
-ALTER TABLE `asistencia`
-  ADD CONSTRAINT `asistencia_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`);
-
---
--- Filtros para la tabla `bitacora`
---
-ALTER TABLE `bitacora`
-  ADD CONSTRAINT `bitacora_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`);
-
---
--- Filtros para la tabla `carrera`
---
-ALTER TABLE `carrera`
-  ADD CONSTRAINT `carrera_ibfk_1` FOREIGN KEY (`id_institucion`) REFERENCES `institucion` (`id_institucion`);
-
---
--- Filtros para la tabla `competencias`
---
-ALTER TABLE `competencias`
-  ADD CONSTRAINT `competencias_ibfk_1` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `coordinador`
---
-ALTER TABLE `coordinador`
-  ADD CONSTRAINT `coordinador_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),
-  ADD CONSTRAINT `coordinador_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`);
-
---
--- Filtros para la tabla `directivo`
---
-ALTER TABLE `directivo`
-  ADD CONSTRAINT `directivo_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),
-  ADD CONSTRAINT `directivo_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`);
-
---
--- Filtros para la tabla `empresa`
---
-ALTER TABLE `empresa`
-  ADD CONSTRAINT `empresa_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
-
---
--- Filtros para la tabla `estudiante`
---
-ALTER TABLE `estudiante`
-  ADD CONSTRAINT `estudiante_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),
-  ADD CONSTRAINT `estudiante_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`);
-
---
--- Filtros para la tabla `estudiante_competencias`
---
-ALTER TABLE `estudiante_competencias`
-  ADD CONSTRAINT `estudiante_competencias_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`) ON DELETE CASCADE,
-  ADD CONSTRAINT `estudiante_competencias_ibfk_2` FOREIGN KEY (`id_competencia`) REFERENCES `competencias` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `evaluacion`
---
-ALTER TABLE `evaluacion`
-  ADD CONSTRAINT `evaluacion_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`),
-  ADD CONSTRAINT `evaluacion_ibfk_2` FOREIGN KEY (`id_bitacora`) REFERENCES `bitacora` (`id_bitacora`);
-
---
--- Filtros para la tabla `evaluacion_empresa`
---
-ALTER TABLE `evaluacion_empresa`
-  ADD CONSTRAINT `evaluacion_empresa_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`),
-  ADD CONSTRAINT `evaluacion_empresa_ibfk_2` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`);
-
---
--- Filtros para la tabla `institucion`
---
-ALTER TABLE `institucion`
-  ADD CONSTRAINT `fk_institucion_administrador` FOREIGN KEY (`id_administrador`) REFERENCES `administrador` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Filtros para la tabla `notificacion`
---
-ALTER TABLE `notificacion`
-  ADD CONSTRAINT `notificacion_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
-
---
--- Filtros para la tabla `oferta_competencias`
---
-ALTER TABLE `oferta_competencias`
-  ADD CONSTRAINT `oferta_competencias_ibfk_1` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`) ON DELETE CASCADE,
-  ADD CONSTRAINT `oferta_competencias_ibfk_2` FOREIGN KEY (`id_competencia`) REFERENCES `competencias` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `oferta_practica`
---
-ALTER TABLE `oferta_practica`
-  ADD CONSTRAINT `oferta_practica_ibfk_1` FOREIGN KEY (`id_carrera`) REFERENCES `carrera` (`id_carrera`),
-  ADD CONSTRAINT `oferta_practica_ibfk_2` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_usuario`);
-
---
--- Filtros para la tabla `postulacion`
---
-ALTER TABLE `postulacion`
-  ADD CONSTRAINT `postulacion_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`),
-  ADD CONSTRAINT `postulacion_ibfk_2` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`);
-
---
--- Filtros para la tabla `practica`
---
-ALTER TABLE `practica`
-  ADD CONSTRAINT `practica_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`),
-  ADD CONSTRAINT `practica_ibfk_2` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`),
-  ADD CONSTRAINT `practica_ibfk_3` FOREIGN KEY (`id_coordinador`) REFERENCES `coordinador` (`id_usuario`),
-  ADD CONSTRAINT `practica_ibfk_4` FOREIGN KEY (`id_directivo`) REFERENCES `directivo` (`id_usuario`);
-
---
--- Filtros para la tabla `superadministrador`
---
-ALTER TABLE `superadministrador`
-  ADD CONSTRAINT `superadministrador_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
-
---
--- Filtros para la tabla `usuario`
---
-ALTER TABLE `usuario`
-  ADD CONSTRAINT `usuario_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `rol` (`id_rol`),
-  ADD CONSTRAINT `usuario_ibfk_2` FOREIGN KEY (`id_institucion`) REFERENCES `institucion` (`id_institucion`);
-COMMIT;
-
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-07-05 17:30:42
