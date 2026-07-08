@@ -201,7 +201,7 @@ if ($token === '') {
                     <p class="mb-2"><strong>Carrera:</strong> <?= htmlspecialchars($postulacion['nombre_carrera']) ?></p>
                     <p class="mb-3"><strong>Oferta:</strong> <?= htmlspecialchars($postulacion['titulo_oferta']) ?> (<?= htmlspecialchars($postulacion['duracion_meses']) ?> meses)</p>
                     
-                    <a href="archivos/cv/cv.pdf" target="_blank" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2">
+                    <a href="archivos/cv/<?= urlencode($postulacion['cv_estudiante']) ?>" target="_blank" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2">
                         <i class="bi bi-file-earmark-pdf-fill"></i> Ver Currículum Vitae
                     </a>
                 </div>

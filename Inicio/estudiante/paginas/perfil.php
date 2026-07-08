@@ -53,7 +53,7 @@ if (isset($_POST['reemplazar_cv']) && !empty($_FILES['cv']['name'])) {
     $cvActual = mysqli_fetch_assoc($consultaCV);
 
     if (!empty($cvActual['cv_estudiante'])) {
-        $archivoAnterior = "../../archivos/cv/" . $cvActual['cv_estudiante'];
+        $archivoAnterior = "../archivos/cv/" . $cvActual['cv_estudiante'];
         if (file_exists($archivoAnterior)) {
             unlink($archivoAnterior);
         }
@@ -62,13 +62,13 @@ if (isset($_POST['reemplazar_cv']) && !empty($_FILES['cv']['name'])) {
     $nombreArchivo = $_FILES['cv']['name'];
     
     // Crear el directorio si no existe
-    if (!is_dir("../../archivos/cv/")) {
-        mkdir("../../archivos/cv/", 0777, true);
+    if (!is_dir("../archivos/cv/")) {
+        mkdir("../archivos/cv/", 0777, true);
     }
 
     move_uploaded_file(
         $_FILES['cv']['tmp_name'],
-        "../../archivos/cv/" . $nombreArchivo
+        "../archivos/cv/" . $nombreArchivo
     );
 
     $nombreArchivoEscaped = mysqli_real_escape_string($conexion, $nombreArchivo);
@@ -91,7 +91,7 @@ if (isset($_POST['eliminar_cv'])) {
     $cvActual = mysqli_fetch_assoc($consultaCV);
 
     if (!empty($cvActual['cv_estudiante'])) {
-        $archivo = "../../archivos/cv/" . $cvActual['cv_estudiante'];
+        $archivo = "../archivos/cv/" . $cvActual['cv_estudiante'];
         if (file_exists($archivo)) {
             unlink($archivo);
         }
@@ -234,7 +234,7 @@ $estudiante = mysqli_fetch_assoc($resultado);
                     <form method="POST" enctype="multipart/form-data">
                         <?php if (!empty($estudiante['cv_estudiante'])) { ?>
                             <div class="mb-3">
-                                <a href="../../archivos/cv/<?php echo htmlspecialchars($estudiante['cv_estudiante']); ?>" target="_blank" class="btn btn-success me-2">Ver CV</a>
+                                <a href="../archivos/cv/<?php echo htmlspecialchars($estudiante['cv_estudiante']); ?>" target="_blank" class="btn btn-success me-2">Ver CV</a>
                                 <button type="submit" name="eliminar_cv" class="btn btn-danger">Eliminar CV</button>
                             </div>
                         <?php } ?>

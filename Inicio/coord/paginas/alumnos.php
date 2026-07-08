@@ -1,7 +1,8 @@
 <?php
 // Consulta de alumnos de la carrera
 $sql_alumnos = "SELECT e.id_usuario, e.nombre, e.apellido, e.nivel_curricular, e.habilidades, u.correo, u.estado_cuenta,
-                       p.estado_practica
+                       p.id_practica, p.estado_practica, p.fecha_inicio,
+                       (SELECT MAX(b.fecha_registro) FROM bitacora b WHERE b.id_practica = p.id_practica) as ultima_bitacora
                 FROM estudiante e
                 JOIN usuario u ON e.id_usuario = u.id_usuario
                 LEFT JOIN practica p ON e.id_usuario = p.id_estudiante
@@ -51,7 +52,23 @@ while ($o = mysqli_fetch_assoc($res_ofertas)) {
                     <?php while ($alumno = mysqli_fetch_assoc($resultado)): ?>
                         <tr>
                             <td>
-                                <div class="fw-bold"><?php echo htmlspecialchars($alumno['nombre'] . ' ' . $alumno['apellido']); ?></div>
+                                <div class="fw-bold d-inline-block"><?php echo htmlspecialchars($alumno['nombre'] . ' ' . $alumno['apellido']); ?></div>
+                                <?php 
+                                    $atrasado = false;
+                                    if (strtolower($alumno['estado_practica'] ?? '') === 'en_curso') {
+                                        $fechaRef = $alumno['ultima_bitacora'] ?: $alumno['fecha_inicio'];
+                                        if ($fechaRef) {
+                                            $dias = floor((time() - strtotime($fechaRef)) / 86400);
+                                            if ($dias > 15) {
+                                                $atrasado = true;
+                                            }
+                                        }
+                                    }
+                                    if ($atrasado) {
+                                        echo '<span class="badge bg-danger ms-2 align-middle" title="No registra bitácora hace más de 15 días"><i class="bi bi-exclamation-triangle"></i> Bitácora Atrasada</span>';
+                                    }
+                                ?>
+                                <br>
                                 <small class="text-muted">ID: <?php echo $alumno['id_usuario']; ?></small>
                             </td>
                             <td><?php echo htmlspecialchars($alumno['correo']); ?></td>

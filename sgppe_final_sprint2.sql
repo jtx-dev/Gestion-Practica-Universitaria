@@ -350,6 +350,7 @@ CREATE TABLE `estudiante` (
   `nivel_curricular` int(11) NOT NULL COMMENT 'Semestre o nivel de avance',
   `habilidades` text DEFAULT NULL COMMENT 'Habilidades declaradas para matching',
   `ramos_aprobados` int(11) NOT NULL COMMENT 'Ramos aprobados, validación BR-04',
+  `cv_estudiante` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   KEY `id_carrera` (`id_carrera`),
   CONSTRAINT `estudiante_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`),

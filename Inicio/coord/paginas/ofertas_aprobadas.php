@@ -171,7 +171,7 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
                             <div class="text-end">
                                 <span class="badge <?php echo $badge_color; ?>"><?php echo $afinidad; ?>%</span>
                                 <?php if ($al['cv_estudiante']) { ?>
-                                    <a href="../<?php echo htmlspecialchars($al['cv_estudiante']); ?>" target="_blank" class="btn btn-outline-primary btn-sm d-block mt-1" style="font-size: 0.7rem; padding: 0.1rem 0.3rem;"><i class="bi bi-file-pdf"></i> CV</a>
+                                    <a href="../archivos/cv/<?php echo htmlspecialchars($al['cv_estudiante']); ?>" target="_blank" class="btn btn-outline-primary btn-sm d-block mt-1" style="font-size: 0.7rem; padding: 0.1rem 0.3rem;"><i class="bi bi-file-pdf"></i> CV</a>
                                 <?php } ?>
                                 <?php if ($al['token_confirmacion']) { ?>
                                     <a href="../empresa_confirmar.php?token=<?php echo $al['token_confirmacion']; ?>" target="_blank" class="btn btn-success btn-sm d-block mt-1" style="font-size: 0.7rem; padding: 0.1rem 0.3rem;" title="Simular confirmación de empresa (sin credenciales)"><i class="bi bi-link-45deg"></i> Link Empresa</a>

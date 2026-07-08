@@ -37,7 +37,7 @@ if (isset($_POST['guardar_bitacora'])) {
     if ($estadoPractica !== 'en_curso') {
         $error = "No puedes registrar bitácoras porque tu práctica no se encuentra en curso.";
     } else {
-        $fecha = mysqli_real_escape_string($conexion, $_POST['fecha_registro']);
+        $fecha = date('Y-m-d');
         $actividades = mysqli_real_escape_string($conexion, $_POST['actividades']);
         $logros = mysqli_real_escape_string($conexion, $_POST['logros']);
         $horas = (int)$_POST['horas_registradas'];
@@ -53,13 +53,13 @@ if (isset($_POST['guardar_bitacora'])) {
 
         $ultimaBitacora = mysqli_fetch_assoc($consultaUltima);
 
-        if (empty($fecha) || empty($actividades) || empty($horas)) {
+        if (empty($actividades) || empty($horas)) {
             $error = "Por favor completa todos los campos";
         } elseif ($horas > 42) {
             $error = "Has superado el límite de 42 horas semanales permitidas por norma institucional";
         } elseif ($ultimaBitacora) {
             $dias = floor(
-                (strtotime($fecha) - strtotime($ultimaBitacora['fecha_registro']))
+                (time() - strtotime($ultimaBitacora['fecha_registro']))
                 / 86400
             );
 
@@ -151,13 +151,9 @@ $resBitacoras = mysqli_query($conexion, "
         <?php if ($estadoPractica === 'en_curso'): ?>
             <form method="POST">
                 <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Fecha</label>
-                        <input type="date" name="fecha_registro" class="form-control" required>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Horas</label>
-                        <input type="number" name="horas_registradas" class="form-control" required>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Horas Registradas</label>
+                        <input type="number" name="horas_registradas" class="form-control" placeholder="Cantidad de horas trabajadas..." required>
                     </div>
                 </div>
                 <div class="mb-3">
