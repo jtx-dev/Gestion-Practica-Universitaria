@@ -8,7 +8,7 @@ h4,
 h5,
 a,
 button {
-    font-family: "Fredoka", sans-serif;
+    font-family: "Open sans", sans-serif;
 }
 
 p,
@@ -131,3 +131,13 @@ body {
 textarea{
     resize:none;
 }
+
+.card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
