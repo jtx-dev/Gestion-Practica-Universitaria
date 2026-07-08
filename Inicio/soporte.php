@@ -13,70 +13,21 @@ include('../conexion.php');
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-            --secondary-bg: #f8f9fa;
-        }
+    <link rel="stylesheet" href="../assets/css/base.css">
 
-        body {
-            background-color: var(--secondary-bg);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .navbar-brand img {
-            max-height: 50px;
-        }
-
-        .support-header {
-            background-color: white;
-            padding: 60px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .info-card {
-            border: none;
-            border-radius: 12px;
-            background-color: white;
-        }
-
-        .accordion-button:not(.collapsed) {
-            background-color: rgba(13, 110, 253, 0.05);
-            color: var(--primary-color);
-        }
-    </style>
 </head>
 
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="inicio.php">
-                <div class="bg-secondary text-white p-2 d-inline-block rounded"
-                    style="width: 120px; text-align: center;">TU LOGO</div>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="proceso.php">¿Cómo funciona?</a></li>
-                    <li class="nav-item"><a class="nav-link" href="empresas.php">Empresas</a></li>
-                    <li class="nav-item"><a class="nav-link active fw-bold" href="soporte.php">Soporte</a></li>
-                    <li class="nav-item ms-lg-3"><a class="btn btn-primary" href="iniciar_sesion.php">Iniciar Sesión</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php
+    include('componentes/navbar-inicio.php');
+    renderNavbar();
+    ?>
 
     <!-- Header -->
     <header class="support-header text-center">
         <div class="container">
-            <h1 class="fw-bold">Centro de Ayuda</h1>
+            <h1 class="display-4 fw-bold">Centro de Ayuda</h1>
             <p class="text-muted">¿Tienes dudas con el proceso de prácticas? Estamos para ayudarte.</p>
         </div>
     </header>
