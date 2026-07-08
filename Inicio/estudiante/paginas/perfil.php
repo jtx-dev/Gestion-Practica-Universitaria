@@ -3,6 +3,7 @@
 $idUsuario = $id_estudiante;
 
 $mensaje = null;
+$tipo_mensaje = 'success';
 
 if (isset($_POST['guardar'])) {
     $habilidades = mysqli_real_escape_string($conexion, $_POST['habilidades']);
@@ -22,6 +23,9 @@ if (isset($_POST['guardar'])) {
         // Guardar nuevas competencias por ID
         if (!empty($_POST['competencias_ids'])) {
             $ids = explode(',', $_POST['competencias_ids']);
+            if (count($ids) > 7) {
+                throw new Exception("No puedes seleccionar más de 7 habilidades destacadas.");
+            }
             foreach ($ids as $id_comp) {
                 $id_comp = (int)$id_comp;
                 if ($id_comp > 0) {
@@ -31,9 +35,11 @@ if (isset($_POST['guardar'])) {
         }
         mysqli_commit($conexion);
         $mensaje = "Habilidades y perfil actualizados correctamente";
+        $tipo_mensaje = 'success';
     } catch (Exception $e) {
         mysqli_rollback($conexion);
-        $mensaje = "Error al actualizar habilidades";
+        $mensaje = $e->getMessage();
+        $tipo_mensaje = 'danger';
     }
 }
 
@@ -72,6 +78,7 @@ if (isset($_POST['reemplazar_cv']) && !empty($_FILES['cv']['name'])) {
         WHERE id_usuario = $idUsuario        
     ");
     $mensaje = "CV actualizado correctamente";
+    $tipo_mensaje = 'success';
 }
 
 if (isset($_POST['eliminar_cv'])) {
@@ -112,7 +119,7 @@ $estudiante = mysqli_fetch_assoc($resultado);
 ?>
 
 <?php if (isset($mensaje)) { ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-<?php echo $tipo_mensaje; ?> alert-dismissible fade show" role="alert">
         <?php echo htmlspecialchars($mensaje); ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -176,7 +183,7 @@ $estudiante = mysqli_fetch_assoc($resultado);
                                 const checked = comp.marcada ? 'checked' : '';
                                 contenedor.innerHTML += `
                                     <div>
-                                        <input type="checkbox" class="btn-check" id="hab_${comp.id}" value="${comp.id}" data-nombre="${comp.nombre}" ${checked} onchange="actualizarHabilidades()">
+                                        <input type="checkbox" class="btn-check" id="hab_${comp.id}" value="${comp.id}" data-nombre="${comp.nombre}" ${checked} onchange="actualizarHabilidades(event)">
                                         <label class="btn btn-outline-primary btn-sm rounded-pill" for="hab_${comp.id}">+ ${comp.nombre}</label>
                                     </div>
                                 `;
@@ -190,10 +197,18 @@ $estudiante = mysqli_fetch_assoc($resultado);
                     }
                 });
 
-                function actualizarHabilidades() {
+                function actualizarHabilidades(event) {
                     const checks = document.querySelectorAll('#contenedor-habilidades input:checked');
-                    const ids = Array.from(checks).map(c => c.value);
-                    const nombres = Array.from(checks).map(c => c.getAttribute('data-nombre'));
+                    if (checks.length > 7) {
+                        alert('Puedes seleccionar un máximo de 7 habilidades destacadas.');
+                        if (event && event.target) {
+                            event.target.checked = false;
+                        }
+                        return;
+                    }
+                    const updatedChecks = document.querySelectorAll('#contenedor-habilidades input:checked');
+                    const ids = Array.from(updatedChecks).map(c => c.value);
+                    const nombres = Array.from(updatedChecks).map(c => c.getAttribute('data-nombre'));
                     
                     document.getElementById('competencias_ids').value = ids.join(',');
                     document.getElementById('habilidades_texto').value = nombres.join(', ');

@@ -31,6 +31,85 @@ if ($res_notif) {
 if (!empty($notificaciones)) {
     mysqli_query($conexion, "UPDATE notificacion SET leida = 1 WHERE id_usuario = $id_estudiante");
 }
+
+// OBTENER ESTADO DINÁMICO DEL PROCESO
+$resPost = mysqli_query($conexion, "SELECT estado_postulacion, cv_estudiante FROM postulacion WHERE id_estudiante = $id_estudiante ORDER BY fecha_postulacion DESC LIMIT 1");
+$post = mysqli_fetch_assoc($resPost);
+
+$resPrac = mysqli_query($conexion, "SELECT estado_practica FROM practica WHERE id_estudiante = $id_estudiante LIMIT 1");
+$prac = mysqli_fetch_assoc($resPrac);
+
+// Carga de Documentos
+$docPorcentaje = 0;
+$docBadgeText = "0%";
+$docDetalleText = "Pendiente (Falta cargar CV en perfil)";
+$docClase = "bg-secondary";
+$docIcono = "bi-exclamation-circle";
+
+if ($post && !empty($post['cv_estudiante'])) {
+    $docPorcentaje = 100;
+    $docBadgeText = "100%";
+    $docDetalleText = "Completado (CV y antecedentes cargados)";
+    $docClase = "bg-success";
+    $docIcono = "bi-check-circle-fill";
+}
+
+// Validación de Empresa
+$empPorcentaje = 0;
+$empBadgeText = "0%";
+$empDetalleText = "Sin postulaciones (No has iniciado postulaciones)";
+$empClase = "bg-secondary";
+$empIcono = "bi-info-circle";
+
+if ($prac) {
+    $estadoPrac = $prac['estado_practica'];
+    if ($estadoPrac === 'en_curso') {
+        $empPorcentaje = 100;
+        $empBadgeText = "100%";
+        $empDetalleText = "Confirmada (Empresa aceptó postulación, práctica en curso)";
+        $empClase = "bg-success";
+        $empIcono = "bi-check-circle-fill";
+    } elseif (in_array($estadoPrac, ['finalizado', 'evaluado', 'informe_entregado'])) {
+        $empPorcentaje = 100;
+        $empBadgeText = "100%";
+        $empDetalleText = "Finalizada (Práctica completada con éxito)";
+        $empClase = "bg-success";
+        $empIcono = "bi-check-circle-fill";
+    } elseif ($estadoPrac === 'asignado') {
+        $empPorcentaje = 70;
+        $empBadgeText = "70%";
+        $empDetalleText = "Asignada (Coordinador asignó estudiante, pendiente inicio)";
+        $empClase = "bg-info text-dark";
+        $empIcono = "bi-clock-history";
+    } else { // postulado
+        $empPorcentaje = 40;
+        $empBadgeText = "40%";
+        $empDetalleText = "Postulado (A la espera de respuesta de la empresa)";
+        $empClase = "bg-warning text-dark";
+        $empIcono = "bi-hourglass-split";
+    }
+} elseif ($post) {
+    $estadoPost = $post['estado_postulacion'];
+    if ($estadoPost === 'espera') {
+        $empPorcentaje = 40;
+        $empBadgeText = "40%";
+        $empDetalleText = "En revisión (A la espera de respuesta de la empresa)";
+        $empClase = "bg-warning text-dark";
+        $empIcono = "bi-hourglass-split";
+    } elseif ($estadoPost === 'aceptada') {
+        $empPorcentaje = 100;
+        $empBadgeText = "100%";
+        $empDetalleText = "Aceptada (Empresa aceptó, listo para formalizar)";
+        $empClase = "bg-success";
+        $empIcono = "bi-check-circle-fill";
+    } elseif ($estadoPost === 'rechazada') {
+        $empPorcentaje = 0;
+        $empBadgeText = "0%";
+        $empDetalleText = "Rechazada (Empresa declinó postulación)";
+        $empClase = "bg-danger";
+        $empIcono = "bi-x-circle-fill";
+    }
+}
 ?>
 
 <div class="row g-4 mb-5">
@@ -39,18 +118,24 @@ if (!empty($notificaciones)) {
             <h5 class="fw-bold mb-4">Estado de mi Proceso</h5>
             <div class="row g-4">
                 <div class="col-md-6">
-                    <label class="small fw-bold text-secondary mb-2">Carga de Documentos</label>
-                    <div class="progress">
-                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="small fw-bold text-secondary">Carga de Documentos</label>
+                        <span class="badge rounded-pill <?php echo $docClase; ?> small"><?php echo $docBadgeText; ?></span>
                     </div>
-                    <small class="text-success mt-1 d-inline-block">Completado <i class="bi bi-check-circle"></i></small>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar <?php echo $docClase; ?>" style="width: <?php echo $docPorcentaje; ?>%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block small"><i class="bi <?php echo $docIcono; ?> me-1"></i> <?php echo $docDetalleText; ?></small>
                 </div>
                 <div class="col-md-6">
-                    <label class="small fw-bold text-secondary mb-2">Validación de Empresa</label>
-                    <div class="progress">
-                        <div class="progress-bar bg-warning" style="width: 40%"></div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="small fw-bold text-secondary">Validación de Empresa</label>
+                        <span class="badge rounded-pill <?php echo $empClase; ?> small"><?php echo $empBadgeText; ?></span>
                     </div>
-                    <small class="text-muted mt-1 d-inline-block">En proceso (40%)</small>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar <?php echo $empClase; ?>" style="width: <?php echo $empPorcentaje; ?>%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block small"><i class="bi <?php echo $empIcono; ?> me-1"></i> <?php echo $empDetalleText; ?></small>
                 </div>
             </div>
         </div>

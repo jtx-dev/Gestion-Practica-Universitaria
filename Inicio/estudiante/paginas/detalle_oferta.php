@@ -35,19 +35,45 @@ AND id_oferta = $id_oferta
 $resExiste = mysqli_query($conexion, $sqlExiste);
 $yaPostulo = $resExiste && mysqli_num_rows($resExiste) > 0;
 
-if (isset($_POST['postular']) && !$yaPostulo && $oferta['estado_oferta'] == 'activa') {
+// Verificar si tiene una práctica activa en curso o asignada
+$sqlActiva = "
+SELECT estado_practica
+FROM practica
+WHERE id_estudiante = $id_estudiante
+AND estado_practica IN ('asignado', 'en_curso', 'informe_entregado', 'evaluado')
+LIMIT 1
+";
+$resActiva = mysqli_query($conexion, $sqlActiva);
+$tieneActiva = $resActiva && mysqli_num_rows($resActiva) > 0;
+$practicaActiva = $tieneActiva ? mysqli_fetch_assoc($resActiva) : null;
+
+// Obtener el CV del estudiante desde su perfil
+$sqlCV = "SELECT cv_estudiante FROM estudiante WHERE id_usuario = $id_estudiante LIMIT 1";
+$resCV = mysqli_query($conexion, $sqlCV);
+$estCV = mysqli_fetch_assoc($resCV);
+$cvEstudiante = $estCV['cv_estudiante'] ?? '';
+$tieneCV = !empty($cvEstudiante);
+
+if (isset($_POST['postular']) && !$yaPostulo && !$tieneActiva && $tieneCV && $oferta['estado_oferta'] == 'activa') {
+    $token = bin2hex(random_bytes(24));
+    $expires = date('Y-m-d H:i:s', strtotime('+15 days'));
+
     $sqlPostular = "
     INSERT INTO postulacion
     (
         id_estudiante,
         id_oferta,
-        cv_estudiante
+        cv_estudiante,
+        token_confirmacion,
+        fecha_limite_confirmacion
     )
     VALUES
     (
         $id_estudiante,
         $id_oferta,
-        'cv.pdf'
+        '" . mysqli_real_escape_string($conexion, $cvEstudiante) . "',
+        '$token',
+        '$expires'
     )
     ";
 
@@ -124,10 +150,26 @@ if (isset($_POST['postular']) && !$yaPostulo && $oferta['estado_oferta'] == 'act
         <h5>Fecha de Publicación</h5>
         <p><?php echo date("d-m-Y", strtotime($oferta['fecha_publicacion'])); ?></p>
 
+        <?php if ($tieneActiva) { ?>
+            <div class="alert alert-warning border-0 border-start border-warning border-4 shadow-sm mb-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Ya cuentas con un proceso de práctica registrado (Estado actual: <strong class="text-capitalize"><?php echo htmlspecialchars($practicaActiva['estado_practica']); ?></strong>). No se permiten nuevas postulaciones.
+            </div>
+        <?php } elseif (!$tieneCV && !$yaPostulo) { ?>
+            <div class="alert alert-danger border-0 border-start border-danger border-4 shadow-sm mb-4">
+                <i class="bi bi-x-circle-fill me-2"></i>
+                No has cargado tu Currículum Vitae en tu perfil. Por favor, sube tu CV en la sección de <a href="inicio.php?pagina=perfil" class="alert-link fw-bold">Mi Perfil</a> antes de postular.
+            </div>
+        <?php } ?>
+
         <div class="mt-4">
             <a href="inicio.php?pagina=dashboard" class="btn btn-secondary me-2">Volver</a>
             <?php if ($oferta['estado_oferta'] == 'cerrada') { ?>
                 <button class="btn btn-danger" disabled>Oferta Cerrada</button>
+            <?php } elseif ($tieneActiva) { ?>
+                <button class="btn btn-warning text-dark" disabled><i class="bi bi-lock-fill me-1"></i>Práctica en Curso</button>
+            <?php } elseif (!$tieneCV) { ?>
+                <button class="btn btn-danger" disabled><i class="bi bi-file-earmark-pdf-fill me-1"></i>Sube tu CV para postular</button>
             <?php } elseif (!$yaPostulo) { ?>
                 <form method="POST" class="d-inline">
                     <button type="submit" name="postular" class="btn btn-primary">Postular</button>
