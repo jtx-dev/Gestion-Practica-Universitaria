@@ -124,71 +124,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Gestión de Prácticas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-            --secondary-bg: #f8f9fa;
-        }
-        body {
-            background-color: var(--secondary-bg);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .login-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 0;
-        }
-        .card-login {
-            border: none;
-            border-radius: 12px;
-            max-width: 400px;
-            width: 100%;
-        }
-        .btn-login {
-            padding: 12px;
-            font-weight: bold;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link rel="stylesheet" href="../assets/css/base.css">
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="inicio.php">
-                <div class="bg-secondary text-white p-2 d-inline-block rounded" style="width: 120px; text-align: center;">TU LOGO</div>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="proceso.php">¿Cómo funciona?</a></li>
-                    <li class="nav-item"><a class="nav-link" href="empresas.php">Empresas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="soporte.php">Soporte</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php
+    include('componentes/navbar-inicio.php');
+    renderNavbar();
+    ?>
 
     <main class="login-container">
         <div class="container d-flex justify-content-center">
             <div class="card card-login shadow-sm p-4 bg-white">
                 <div class="card-body">
+                    <div class="text-center">
+                        <h1 class="display-3">
+                            <span class="fs-1 text-secondary material-symbols-outlined">
+                                lock
+                            </span>
+                        </h1>
+                    </div>
                     <div class="text-center mb-4">
                         <h2 class="fw-bold">Acceso al Portal</h2>
                         <p class="text-muted small">Ingresa tus credenciales institucionales para continuar</p>
                     </div>
 
                     <?php if ($mensaje !== ''): ?>
-                        <div class="alert alert-<?= htmlspecialchars($tipoMensaje) ?> alert-dismissible fade show" role="alert">
+                        <div class="alert alert-<?= htmlspecialchars($tipoMensaje) ?> alert-dismissible fade show"
+                            role="alert">
                             <?= htmlspecialchars($mensaje) ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
                         </div>
@@ -196,15 +166,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <form method="post" action="iniciar_sesion.php" autocomplete="off">
                         <div class="mb-3">
-                            <label for="email" class="form-label text-secondary small fw-bold">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@universidad.cl" value="<?= htmlspecialchars($correo) ?>" required>
+                            <label for="email" class="form-label text-secondary small fw-bold">Correo
+                                Electrónico</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                placeholder="ejemplo@universidad.cl" value="<?= htmlspecialchars($correo) ?>" required>
                         </div>
 
                         <div class="mb-4">
                             <label for="password" class="form-label text-secondary small fw-bold">Contraseña</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="••••••••" required>
                             <div class="text-end mt-1">
-                                <a href="#" class="text-decoration-none small">¿Olvidaste tu contraseña?</a>
+                                <a href="../olvidada.php" class="text-decoration-none small">¿Olvidaste tu contraseña?</a>
                             </div>
                         </div>
 
@@ -225,12 +198,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <footer class="py-4 bg-white border-top text-center mt-auto">
+    <footer class="py-4 bg-white border-top text-center mt-5">
         <div class="container">
-            <span class="text-muted small">© 2026 Gestión de Prácticas - &lt nombre institucional &gt</span>
+            <span class="text-muted small">© 2026 Gestión de Prácticas</span>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

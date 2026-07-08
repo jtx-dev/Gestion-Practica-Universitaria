@@ -17,7 +17,7 @@ $pagina_actual = isset($pagina_actual) ? $pagina_actual : 'dashboard';
 <body>
     <div class="sidebar d-flex flex-column">
         <div class="p-4 mb-2">
-            <div class="bg-primary text-white p-2 rounded text-center fw-bold shadow-sm">Super Administrador</div>
+            <div class="bg-primary text-white p-2 rounded text-center fw-bold shadow-sm">SGPPE - Super Administrador</div>
         </div>
 
         <nav class="nav flex-column flex-grow-1">

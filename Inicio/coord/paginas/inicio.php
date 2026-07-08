@@ -34,15 +34,45 @@ $sql_ofertas_activas = "SELECT e.nombre_empresa, o.titulo, o.cupos, o.id_oferta
                         WHERE o.id_carrera = $id_carrera AND o.estado_oferta = 'activa' 
                         ORDER BY o.fecha_publicacion DESC LIMIT 4";
 $res_ofertas_activas = mysqli_query($conexion, $sql_ofertas_activas);
+// OBTENER TOTAL DE BITACORAS ATRASADAS
+$sql_atrasados = "
+    SELECT COUNT(*) as total
+    FROM practica p
+    INNER JOIN estudiante e ON p.id_estudiante = e.id_usuario
+    WHERE e.id_carrera = $id_carrera
+      AND p.estado_practica = 'en_curso'
+      AND (
+        COALESCE(
+          (SELECT MAX(fecha_registro) FROM bitacora b WHERE b.id_practica = p.id_practica),
+          p.fecha_inicio
+        ) < DATE_SUB(CURDATE(), INTERVAL 15 DAY)
+      )
+";
+$res_atrasados = mysqli_query($conexion, $sql_atrasados);
+$total_atrasados = mysqli_fetch_assoc($res_atrasados)['total'] ?? 0;
 ?>
 
-<header class="mb-5 d-flex justify-content-between align-items-center">
+<header class="mb-4 d-flex justify-content-between align-items-center">
     <div>
         <h2 class="mb-1 fw-bold">Resumen de Gestión</h2>
         <p class="text-muted">Control estadístico de tu carrera en tiempo real.</p>
     </div>
     <a href="inicio.php?pagina=ofertas" class="btn btn-primary shadow-sm"><i class="bi bi-search me-2"></i>Revisar Ofertas Pendientes</a>
 </header>
+
+<?php if ($total_atrasados > 0): ?>
+    <div class="alert alert-danger border-0 border-start border-danger border-4 shadow-sm mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+                <div>
+                    <strong>¡Alumnos con Bitácoras Atrasadas!</strong> Tienes <strong><?= $total_atrasados ?></strong> estudiante(s) con bitácoras de práctica quincenales atrasadas en tu carrera.
+                </div>
+            </div>
+            <a href="inicio.php?pagina=alumnos" class="btn btn-danger btn-sm fw-bold">Ver Alumnos</a>
+        </div>
+    </div>
+<?php endif; ?>
 
 <!-- Métricas Rápidas -->
 <div class="row g-4 mb-5">

@@ -37,6 +37,9 @@
             <a class="nav-link <?= $pagina_actual === 'validacion' ? 'active' : '' ?>" href="inicio.php?pagina=validacion">
                 <i class="bi bi-file-earmark-check me-2"></i> Validaciones
             </a>
+            <a class="nav-link <?= $pagina_actual === 'postulaciones' ? 'active' : '' ?>" href="inicio.php?pagina=postulaciones">
+                <i class="bi bi-file-earmark-person me-2"></i> Postulaciones
+            </a>
             
             <a class="nav-link text-danger mt-auto mb-4" href="logout.php">
                 <i class="bi bi-box-arrow-left me-2"></i> Cerrar Sesión
