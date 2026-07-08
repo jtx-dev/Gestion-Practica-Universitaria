@@ -47,14 +47,15 @@ $resActiva = mysqli_query($conexion, $sqlActiva);
 $tieneActiva = $resActiva && mysqli_num_rows($resActiva) > 0;
 $practicaActiva = $tieneActiva ? mysqli_fetch_assoc($resActiva) : null;
 
-// Obtener el CV del estudiante desde su perfil
-$sqlCV = "SELECT cv_estudiante FROM estudiante WHERE id_usuario = $id_estudiante LIMIT 1";
+// Obtener el CV y estado de aprobación de documentos del estudiante desde su perfil
+$sqlCV = "SELECT cv_estudiante, documentos_aprobados FROM estudiante WHERE id_usuario = $id_estudiante LIMIT 1";
 $resCV = mysqli_query($conexion, $sqlCV);
 $estCV = mysqli_fetch_assoc($resCV);
 $cvEstudiante = $estCV['cv_estudiante'] ?? '';
 $tieneCV = !empty($cvEstudiante);
+$docsAprobados = ($estCV['documentos_aprobados'] ?? 0) == 1;
 
-if (isset($_POST['postular']) && !$yaPostulo && !$tieneActiva && $tieneCV && $oferta['estado_oferta'] == 'activa') {
+if (isset($_POST['postular']) && !$yaPostulo && !$tieneActiva && $tieneCV && $docsAprobados && $oferta['estado_oferta'] == 'activa') {
     $token = bin2hex(random_bytes(24));
     $expires = date('Y-m-d H:i:s', strtotime('+15 days'));
 
@@ -137,8 +138,19 @@ if (isset($_POST['postular']) && !$yaPostulo && !$tieneActiva && $tieneCV && $of
         <h5>Descripción</h5>
         <p><?php echo nl2br(htmlspecialchars($oferta['descripcion'])); ?></p>
 
-        <h5>Requisitos</h5>
-        <p><?php echo nl2br(htmlspecialchars($oferta['requisitos'])); ?></p>
+        <h5>Requisitos (Aptitudes requeridas)</h5>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <?php
+                $res_comps = mysqli_query($conexion, "SELECT c.nombre FROM oferta_competencias oc INNER JOIN competencias c ON oc.id_competencia = c.id WHERE oc.id_oferta = " . $id_oferta);
+                if (mysqli_num_rows($res_comps) > 0) {
+                    while ($comp = mysqli_fetch_assoc($res_comps)) {
+                        echo '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill p-2" style="font-size: 0.85rem;">' . htmlspecialchars($comp['nombre']) . '</span>';
+                    }
+                } else {
+                    echo '<span class="text-muted small">No se especificaron aptitudes requeridas.</span>';
+                }
+            ?>
+        </div>
 
         <h5>Estado de Oferta</h5>
         <p>
@@ -160,6 +172,11 @@ if (isset($_POST['postular']) && !$yaPostulo && !$tieneActiva && $tieneCV && $of
                 <i class="bi bi-x-circle-fill me-2"></i>
                 No has cargado tu Currículum Vitae en tu perfil. Por favor, sube tu CV en la sección de <a href="inicio.php?pagina=perfil" class="alert-link fw-bold">Mi Perfil</a> antes de postular.
             </div>
+        <?php } elseif (!$docsAprobados && !$yaPostulo) { ?>
+            <div class="alert alert-danger border-0 border-start border-danger border-4 shadow-sm mb-4">
+                <i class="bi bi-shield-x me-2"></i>
+                Tus documentos de práctica aún no han sido aprobados por tu coordinador. Por favor, sube toda tu documentación obligatoria (CV, Cédula, Cert. Alumno Regular) en <a href="inicio.php?pagina=perfil" class="alert-link fw-bold">Mi Perfil</a> y espera la validación del coordinador antes de postular.
+            </div>
         <?php } ?>
 
         <div class="mt-4">
@@ -170,6 +187,8 @@ if (isset($_POST['postular']) && !$yaPostulo && !$tieneActiva && $tieneCV && $of
                 <button class="btn btn-warning text-dark" disabled><i class="bi bi-lock-fill me-1"></i>Práctica en Curso</button>
             <?php } elseif (!$tieneCV) { ?>
                 <button class="btn btn-danger" disabled><i class="bi bi-file-earmark-pdf-fill me-1"></i>Sube tu CV para postular</button>
+            <?php } elseif (!$docsAprobados) { ?>
+                <button class="btn btn-danger" disabled><i class="bi bi-shield-lock-fill me-1"></i>Falta Validación Académica</button>
             <?php } elseif (!$yaPostulo) { ?>
                 <form method="POST" class="d-inline">
                     <button type="submit" name="postular" class="btn btn-primary">Postular</button>

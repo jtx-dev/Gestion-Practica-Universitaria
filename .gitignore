@@ -1,3 +1,12 @@
 .DS_Store
 Informe/
-Inicio/archivos/
+
+# Ignorar archivos en las carpetas de carga, pero mantener las carpetas vacías usando .gitkeep
+Inicio/archivos/cv/*
+!Inicio/archivos/cv/.gitkeep
+
+Inicio/archivos/cedula/*
+!Inicio/archivos/cedula/.gitkeep
+
+Inicio/archivos/alumno_regular/*
+!Inicio/archivos/alumno_regular/.gitkeep

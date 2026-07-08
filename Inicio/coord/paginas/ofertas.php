@@ -103,10 +103,21 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
                             <?php echo htmlspecialchars($fila['descripcion']); ?>
                         </p>
 
-                        <p class="small mb-2">
-                            <strong>Requisitos:</strong>
-                            <?php echo htmlspecialchars($fila['requisitos']); ?>
-                        </p>
+                        <div class="mb-2 small">
+                            <strong>Requisitos (Aptitudes):</strong>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                <?php
+                                    $res_comps = mysqli_query($conexion, "SELECT c.nombre FROM oferta_competencias oc INNER JOIN competencias c ON oc.id_competencia = c.id WHERE oc.id_oferta = " . $fila['id_oferta']);
+                                    if (mysqli_num_rows($res_comps) > 0) {
+                                        while ($comp = mysqli_fetch_assoc($res_comps)) {
+                                            echo '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">' . htmlspecialchars($comp['nombre']) . '</span>';
+                                        }
+                                    } else {
+                                        echo '<span class="text-muted small">No se especificaron aptitudes.</span>';
+                                    }
+                                ?>
+                            </div>
+                        </div>
 
                         <div class="small text-muted">
                             <i class="bi bi-building me-1"></i>

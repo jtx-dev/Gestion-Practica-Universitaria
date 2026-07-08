@@ -41,17 +41,39 @@ $prac = mysqli_fetch_assoc($resPrac);
 
 // Carga de Documentos
 $docPorcentaje = 0;
-$docBadgeText = "0%";
-$docDetalleText = "Pendiente (Falta cargar CV en perfil)";
-$docClase = "bg-secondary";
-$docIcono = "bi-exclamation-circle";
+$has_cv = !empty($estudiante['cv_estudiante']);
+$has_cedula = !empty($estudiante['archivo_cedula']);
+$has_cert = !empty($estudiante['archivo_alumno_regular']);
+$is_approved = ($estudiante['documentos_aprobados'] == 1);
 
-if ($post && !empty($post['cv_estudiante'])) {
-    $docPorcentaje = 100;
+// Cada documento vale 25%
+$docPorcentaje += ($has_cv ? 25 : 0);
+$docPorcentaje += ($has_cedula ? 25 : 0);
+$docPorcentaje += ($has_cert ? 25 : 0);
+// La aprobación del coordinador vale 25%
+$docPorcentaje += ($is_approved ? 25 : 0);
+
+$docBadgeText = "$docPorcentaje%";
+
+if ($is_approved) {
+    $docPorcentaje = 100; // Por si acaso hay discrepancia, la aprobación final setea 100%
     $docBadgeText = "100%";
-    $docDetalleText = "Completado (CV y antecedentes cargados)";
     $docClase = "bg-success";
-    $docIcono = "bi-check-circle-fill";
+    $docIcono = "bi-shield-check";
+    $docDetalleText = "Completado (Documentos aprobados por el coordinador)";
+} else {
+    $docIcono = "bi-exclamation-circle";
+    if ($docPorcentaje === 75) {
+        $docClase = "bg-warning text-dark";
+        $docDetalleText = "Pendiente de validación de tu coordinador (+25%)";
+    } else {
+        $docClase = "bg-secondary";
+        $faltan = [];
+        if (!$has_cv) $faltan[] = "CV (25%)";
+        if (!$has_cedula) $faltan[] = "Cédula (25%)";
+        if (!$has_cert) $faltan[] = "Certificado (25%)";
+        $docDetalleText = "Incompleto (Falta subir: " . implode(', ', $faltan) . " en tu perfil)";
+    }
 }
 
 // Validación de Empresa
@@ -145,11 +167,25 @@ if ($prac) {
 <?php if (!empty($notificaciones)): ?>
 <div class="row mb-4">
     <div class="col-12">
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bell-fill me-2"></i>Nuevas Recomendaciones de tu Coordinador</h5>
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bell-fill me-2"></i>Notificaciones y Novedades</h5>
         <?php foreach ($notificaciones as $notif): ?>
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4" role="alert">
-                <h6 class="alert-heading fw-bold mb-1"><?= htmlspecialchars($notif['titulo']) ?></h6>
-                <p class="mb-0 small"><?= htmlspecialchars($notif['mensaje']) ?></p>
+            <?php
+                $alert_class = 'alert-info border-info';
+                $icon = 'bi-info-circle-fill text-info';
+                if (stripos($notif['titulo'], 'rechaz') !== false || stripos($notif['titulo'], 'incorrect') !== false) {
+                    $alert_class = 'alert-danger border-danger';
+                    $icon = 'bi-exclamation-octagon-fill text-danger';
+                } elseif (stripos($notif['titulo'], 'aprob') !== false || stripos($notif['titulo'], 'acept') !== false) {
+                    $alert_class = 'alert-success border-success';
+                    $icon = 'bi-check-circle-fill text-success';
+                }
+            ?>
+            <div class="alert <?= $alert_class ?> alert-dismissible fade show shadow-sm border-0 border-start border-4 d-flex gap-2" role="alert">
+                <i class="bi <?= $icon ?> fs-5 mt-1"></i>
+                <div>
+                    <h6 class="alert-heading fw-bold mb-1"><?= htmlspecialchars($notif['titulo']) ?></h6>
+                    <p class="mb-0 small"><?= htmlspecialchars($notif['mensaje']) ?></p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endforeach; ?>

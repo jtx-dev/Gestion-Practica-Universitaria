@@ -74,7 +74,9 @@ if (isset($_POST['reemplazar_cv']) && !empty($_FILES['cv']['name'])) {
     $nombreArchivoEscaped = mysqli_real_escape_string($conexion, $nombreArchivo);
     mysqli_query($conexion, "
         UPDATE estudiante
-        SET cv_estudiante = '$nombreArchivoEscaped'
+        SET cv_estudiante = '$nombreArchivoEscaped',
+            documentos_aprobados = 0,
+            motivo_rechazo = NULL
         WHERE id_usuario = $idUsuario        
     ");
     $mensaje = "CV actualizado correctamente";
@@ -98,11 +100,69 @@ if (isset($_POST['eliminar_cv'])) {
 
         mysqli_query($conexion, "
             UPDATE estudiante
-            SET cv_estudiante = ''
+            SET cv_estudiante = '',
+                documentos_aprobados = 0,
+                motivo_rechazo = NULL
             WHERE id_usuario = $idUsuario
         ");
     }
 
+    header("Location: inicio.php?pagina=perfil");
+    exit();
+}
+
+if (isset($_POST['reemplazar_cedula']) && !empty($_FILES['cedula']['name'])) {
+    $consulta = mysqli_query($conexion, "SELECT archivo_cedula FROM estudiante WHERE id_usuario = $idUsuario");
+    $actual = mysqli_fetch_assoc($consulta);
+    if (!empty($actual['archivo_cedula'])) {
+        $archivoAnterior = "../archivos/cedula/" . $actual['archivo_cedula'];
+        if (file_exists($archivoAnterior)) { unlink($archivoAnterior); }
+    }
+    $nombreArchivo = "cedula_" . $idUsuario . "_" . $_FILES['cedula']['name'];
+    if (!is_dir("../archivos/cedula/")) { mkdir("../archivos/cedula/", 0777, true); }
+    move_uploaded_file($_FILES['cedula']['tmp_name'], "../archivos/cedula/" . $nombreArchivo);
+    $nombreEscaped = mysqli_real_escape_string($conexion, $nombreArchivo);
+    mysqli_query($conexion, "UPDATE estudiante SET archivo_cedula = '$nombreEscaped', documentos_aprobados = 0, motivo_rechazo = NULL WHERE id_usuario = $idUsuario");
+    $mensaje = "Cédula de Identidad actualizada correctamente";
+    $tipo_mensaje = 'success';
+}
+
+if (isset($_POST['eliminar_cedula'])) {
+    $consulta = mysqli_query($conexion, "SELECT archivo_cedula FROM estudiante WHERE id_usuario = $idUsuario");
+    $actual = mysqli_fetch_assoc($consulta);
+    if (!empty($actual['archivo_cedula'])) {
+        $archivo = "../archivos/cedula/" . $actual['archivo_cedula'];
+        if (file_exists($archivo)) { unlink($archivo); }
+        mysqli_query($conexion, "UPDATE estudiante SET archivo_cedula = '', documentos_aprobados = 0, motivo_rechazo = NULL WHERE id_usuario = $idUsuario");
+    }
+    header("Location: inicio.php?pagina=perfil");
+    exit();
+}
+
+if (isset($_POST['reemplazar_alumno_regular']) && !empty($_FILES['alumno_regular']['name'])) {
+    $consulta = mysqli_query($conexion, "SELECT archivo_alumno_regular FROM estudiante WHERE id_usuario = $idUsuario");
+    $actual = mysqli_fetch_assoc($consulta);
+    if (!empty($actual['archivo_alumno_regular'])) {
+        $archivoAnterior = "../archivos/alumno_regular/" . $actual['archivo_alumno_regular'];
+        if (file_exists($archivoAnterior)) { unlink($archivoAnterior); }
+    }
+    $nombreArchivo = "alumno_regular_" . $idUsuario . "_" . $_FILES['alumno_regular']['name'];
+    if (!is_dir("../archivos/alumno_regular/")) { mkdir("../archivos/alumno_regular/", 0777, true); }
+    move_uploaded_file($_FILES['alumno_regular']['tmp_name'], "../archivos/alumno_regular/" . $nombreArchivo);
+    $nombreEscaped = mysqli_real_escape_string($conexion, $nombreArchivo);
+    mysqli_query($conexion, "UPDATE estudiante SET archivo_alumno_regular = '$nombreEscaped', documentos_aprobados = 0, motivo_rechazo = NULL WHERE id_usuario = $idUsuario");
+    $mensaje = "Certificado de Alumno Regular actualizado correctamente";
+    $tipo_mensaje = 'success';
+}
+
+if (isset($_POST['eliminar_alumno_regular'])) {
+    $consulta = mysqli_query($conexion, "SELECT archivo_alumno_regular FROM estudiante WHERE id_usuario = $idUsuario");
+    $actual = mysqli_fetch_assoc($consulta);
+    if (!empty($actual['archivo_alumno_regular'])) {
+        $archivo = "../archivos/alumno_regular/" . $actual['archivo_alumno_regular'];
+        if (file_exists($archivo)) { unlink($archivo); }
+        mysqli_query($conexion, "UPDATE estudiante SET archivo_alumno_regular = '', documentos_aprobados = 0, motivo_rechazo = NULL WHERE id_usuario = $idUsuario");
+    }
     header("Location: inicio.php?pagina=perfil");
     exit();
 }
@@ -217,32 +277,93 @@ $estudiante = mysqli_fetch_assoc($resultado);
             </div>
         </div>
 
-        <div class="card card-custom">
+        <!-- Card de Documentación -->
+        <div class="card card-custom mt-4">
             <div class="card-body">
-                <h4 class="fw-bold mb-4">Currículum Vitae</h4>
-                <div class="text-center py-4">
-                    <div class="text-primary" style="font-size:60px;"><i class="bi bi-person-vcard-fill"></i></div>
-                    <h5>
-                        <?php
-                        echo !empty($estudiante['cv_estudiante'])
-                            ? htmlspecialchars($estudiante['cv_estudiante'])
-                            : 'No hay CV cargado';
-                        ?>
-                    </h5>
-                    <p class="text-muted">Gestiona tu currículum para las postulaciones.</p>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Documentación de Práctica</h4>
+                    <?php if ($estudiante['documentos_aprobados'] == 1): ?>
+                        <span class="badge bg-success px-3 py-2"><i class="bi bi-shield-check me-1"></i> Aprobado por Coordinador</span>
+                    <?php else: ?>
+                        <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-clock-history me-1"></i> Pendiente de Validación</span>
+                    <?php endif; ?>
+                </div>
 
-                    <form method="POST" enctype="multipart/form-data">
-                        <?php if (!empty($estudiante['cv_estudiante'])) { ?>
-                            <div class="mb-3">
-                                <a href="../archivos/cv/<?php echo htmlspecialchars($estudiante['cv_estudiante']); ?>" target="_blank" class="btn btn-success me-2">Ver CV</a>
-                                <button type="submit" name="eliminar_cv" class="btn btn-danger">Eliminar CV</button>
+                <?php if ($estudiante['documentos_aprobados'] == 0 && !empty($estudiante['motivo_rechazo'])): ?>
+                    <div class="alert alert-danger border-0 border-start border-danger border-4 shadow-sm mb-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+                            <div>
+                                <strong class="text-danger">Documentación Rechazada:</strong> 
+                                <span><?php echo htmlspecialchars($estudiante['motivo_rechazo']); ?></span>
                             </div>
-                        <?php } ?>
-                        <input type="file" name="cv" class="form-control mb-3" accept=".pdf">
-                        <button type="submit" name="reemplazar_cv" class="btn btn-primary">
-                            <?php echo !empty($estudiante['cv_estudiante']) ? 'Reemplazar CV' : 'Subir CV'; ?>
-                        </button>
-                    </form>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="row g-4">
+                    <!-- 1. Currículum Vitae -->
+                    <div class="col-md-4 text-center border-end">
+                        <div class="text-primary mb-2" style="font-size:40px;"><i class="bi bi-person-vcard-fill"></i></div>
+                        <h6 class="fw-bold mb-1">Currículum Vitae</h6>
+                        <p class="text-muted small mb-2 text-truncate px-2" style="max-width: 100%; font-size: 0.75rem;">
+                            <?php echo !empty($estudiante['cv_estudiante']) ? htmlspecialchars($estudiante['cv_estudiante']) : 'No cargado'; ?>
+                        </p>
+                        <form method="POST" enctype="multipart/form-data">
+                            <?php if (!empty($estudiante['cv_estudiante'])) { ?>
+                                <div class="mb-2">
+                                    <a href="../archivos/cv/<?php echo htmlspecialchars($estudiante['cv_estudiante']); ?>" target="_blank" class="btn btn-sm btn-outline-success">Ver</a>
+                                    <button type="submit" name="eliminar_cv" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </div>
+                            <?php } ?>
+                            <input type="file" name="cv" class="form-control form-control-sm mb-2" accept=".pdf">
+                            <button type="submit" name="reemplazar_cv" class="btn btn-primary btn-sm w-100">
+                                <?php echo !empty($estudiante['cv_estudiante']) ? 'Reemplazar CV' : 'Subir CV'; ?>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 2. Cédula de Identidad -->
+                    <div class="col-md-4 text-center border-end">
+                        <div class="text-primary mb-2" style="font-size:40px;"><i class="bi bi-card-image"></i></div>
+                        <h6 class="fw-bold mb-1">Cédula de Identidad</h6>
+                        <p class="text-muted small mb-2 text-truncate px-2" style="max-width: 100%; font-size: 0.75rem;">
+                            <?php echo !empty($estudiante['archivo_cedula']) ? htmlspecialchars($estudiante['archivo_cedula']) : 'No cargada'; ?>
+                        </p>
+                        <form method="POST" enctype="multipart/form-data">
+                            <?php if (!empty($estudiante['archivo_cedula'])) { ?>
+                                <div class="mb-2">
+                                    <a href="../archivos/cedula/<?php echo htmlspecialchars($estudiante['archivo_cedula']); ?>" target="_blank" class="btn btn-sm btn-outline-success">Ver</a>
+                                    <button type="submit" name="eliminar_cedula" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </div>
+                            <?php } ?>
+                            <input type="file" name="cedula" class="form-control form-control-sm mb-2" accept=".pdf">
+                            <button type="submit" name="reemplazar_cedula" class="btn btn-primary btn-sm w-100">
+                                <?php echo !empty($estudiante['archivo_cedula']) ? 'Reemplazar Cédula' : 'Subir Cédula'; ?>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 3. Certificado de Alumno Regular -->
+                    <div class="col-md-4 text-center">
+                        <div class="text-primary mb-2" style="font-size:40px;"><i class="bi bi-file-earmark-text-fill"></i></div>
+                        <h6 class="fw-bold mb-1">Cert. Alumno Regular</h6>
+                        <p class="text-muted small mb-2 text-truncate px-2" style="max-width: 100%; font-size: 0.75rem;">
+                            <?php echo !empty($estudiante['archivo_alumno_regular']) ? htmlspecialchars($estudiante['archivo_alumno_regular']) : 'No cargado'; ?>
+                        </p>
+                        <form method="POST" enctype="multipart/form-data">
+                            <?php if (!empty($estudiante['archivo_alumno_regular'])) { ?>
+                                <div class="mb-2">
+                                    <a href="../archivos/alumno_regular/<?php echo htmlspecialchars($estudiante['archivo_alumno_regular']); ?>" target="_blank" class="btn btn-sm btn-outline-success">Ver</a>
+                                    <button type="submit" name="eliminar_alumno_regular" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </div>
+                            <?php } ?>
+                            <input type="file" name="alumno_regular" class="form-control form-control-sm mb-2" accept=".pdf">
+                            <button type="submit" name="reemplazar_alumno_regular" class="btn btn-primary btn-sm w-100">
+                                <?php echo !empty($estudiante['archivo_alumno_regular']) ? 'Reemplazar Certificado' : 'Subir Certificado'; ?>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
