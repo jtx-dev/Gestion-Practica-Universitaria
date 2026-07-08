@@ -1,7 +1,8 @@
 <?php
 // Consulta de alumnos de la carrera
-$sql_alumnos = "SELECT e.id_usuario, e.nombre, e.apellido, e.nivel_curricular, e.habilidades, u.correo, u.estado_cuenta,
-                       p.estado_practica
+$sql_alumnos = "SELECT e.id_usuario, e.nombre, e.apellido, e.nivel_curricular, e.habilidades, e.ramos_aprobados, e.cv_estudiante, u.correo, u.estado_cuenta,
+                       p.id_practica, p.estado_practica, p.fecha_inicio,
+                       (SELECT MAX(b.fecha_registro) FROM bitacora b WHERE b.id_practica = p.id_practica) as ultima_bitacora
                 FROM estudiante e
                 JOIN usuario u ON e.id_usuario = u.id_usuario
                 LEFT JOIN practica p ON e.id_usuario = p.id_estudiante
@@ -51,7 +52,23 @@ while ($o = mysqli_fetch_assoc($res_ofertas)) {
                     <?php while ($alumno = mysqli_fetch_assoc($resultado)): ?>
                         <tr>
                             <td>
-                                <div class="fw-bold"><?php echo htmlspecialchars($alumno['nombre'] . ' ' . $alumno['apellido']); ?></div>
+                                <div class="fw-bold d-inline-block"><?php echo htmlspecialchars($alumno['nombre'] . ' ' . $alumno['apellido']); ?></div>
+                                <?php 
+                                    $atrasado = false;
+                                    if (strtolower($alumno['estado_practica'] ?? '') === 'en_curso') {
+                                        $fechaRef = $alumno['ultima_bitacora'] ?: $alumno['fecha_inicio'];
+                                        if ($fechaRef) {
+                                            $dias = floor((time() - strtotime($fechaRef)) / 86400);
+                                            if ($dias > 15) {
+                                                $atrasado = true;
+                                            }
+                                        }
+                                    }
+                                    if ($atrasado) {
+                                        echo '<span class="badge bg-danger ms-2 align-middle" title="No registra bitácora hace más de 15 días"><i class="bi bi-exclamation-triangle"></i> Bitácora Atrasada</span>';
+                                    }
+                                ?>
+                                <br>
                                 <small class="text-muted">ID: <?php echo $alumno['id_usuario']; ?></small>
                             </td>
                             <td><?php echo htmlspecialchars($alumno['correo']); ?></td>
@@ -87,7 +104,19 @@ while ($o = mysqli_fetch_assoc($res_ofertas)) {
                                         ]); ?>)'>
                                     <i class="bi bi-stars"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary" title="Ver Perfil"><i class="bi bi-eye"></i></button>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        title="Ver Perfil" 
+                                        onclick='verPerfil(<?php echo json_encode([
+                                            "nombre" => $alumno["nombre"] . " " . $alumno["apellido"],
+                                            "correo" => $alumno["correo"],
+                                            "nivel" => $alumno["nivel_curricular"],
+                                            "ramos" => $alumno["ramos_aprobados"],
+                                            "habilidades" => $alumno["habilidades"] ?: "Sin registrar",
+                                            "cv" => $alumno["cv_estudiante"],
+                                            "estado" => $alumno["estado_practica"] ?? "No iniciada"
+                                        ]); ?>)'>
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -145,4 +174,68 @@ function verSugerencias(data) {
     document.getElementById('modalSugerenciasCuerpo').innerHTML = cuerpo;
     new bootstrap.Modal(document.getElementById('modalSugerencias')).show();
 }
+
+function verPerfil(data) {
+    let cvHTML = '';
+    if (data.cv && data.cv.trim() !== '') {
+        cvHTML = `<a href="../archivos/cv/${encodeURIComponent(data.cv)}" target="_blank" class="btn btn-sm btn-success fw-bold d-inline-flex align-items-center gap-2"><i class="bi bi-file-earmark-pdf-fill"></i> Descargar Currículum Vitae</a>`;
+    } else {
+        cvHTML = `<span class="badge bg-secondary p-2"><i class="bi bi-exclamation-circle-fill me-1"></i> Sin CV cargado aún</span>`;
+    }
+
+    let habilidadesBadges = '';
+    if (data.habilidades && data.habilidades.trim() !== '' && data.habilidades !== 'Sin registrar') {
+        let lista = data.habilidades.split(',');
+        lista.forEach(h => {
+            habilidadesBadges += `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 me-1 mb-1" style="font-size: 0.8rem;">${h.trim()}</span>`;
+        });
+    } else {
+        habilidadesBadges = `<span class="text-muted small">Sin registrar habilidades</span>`;
+    }
+
+    let body = `
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle fw-bold fs-3 mb-2" style="width: 60px; height: 60px;">
+                ${data.nombre.charAt(0).toUpperCase()}
+            </div>
+            <h5 class="fw-bold mb-1">${data.nombre}</h5>
+            <p class="text-muted small mb-0"><i class="bi bi-envelope me-1"></i>${data.correo}</p>
+        </div>
+        <div class="border rounded-3 p-3 bg-light bg-opacity-50 mb-3">
+            <div class="row g-2 small">
+                <div class="col-6"><strong>Nivel Curricular:</strong></div>
+                <div class="col-6 text-end">Nivel ${data.nivel}</div>
+                <div class="col-6"><strong>Ramos Aprobados:</strong></div>
+                <div class="col-6 text-end">${data.ramos} ramos</div>
+                <div class="col-6"><strong>Estado Práctica:</strong></div>
+                <div class="col-6 text-end"><span class="badge bg-secondary text-capitalize">${data.estado}</span></div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-secondary">Aptitudes Declaradas</label>
+            <div class="d-flex flex-wrap">${habilidadesBadges}</div>
+        </div>
+        <div class="mb-2 text-center">
+            ${cvHTML}
+        </div>
+    `;
+
+    document.getElementById('modalPerfilCuerpo').innerHTML = body;
+    new bootstrap.Modal(document.getElementById('modalPerfil')).show();
+}
 </script>
+
+<!-- Modal de Perfil del Estudiante -->
+<div class="modal fade" id="modalPerfil" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-circle text-primary me-2"></i>Perfil del Estudiante</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div id="modalPerfilCuerpo"></div>
+            </div>
+        </div>
+    </div>
+</div>
