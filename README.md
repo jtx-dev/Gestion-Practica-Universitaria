@@ -34,7 +34,7 @@ El objetivo principal es reducir el uso de herramientas dispersas y entregar tra
 | MySQL / MariaDB | Persistencia de datos |
 | HTML5 | Estructura de interfaces |
 | CSS3 | Estilos visuales personalizados |
-| JavaScript | Interacción en formularios y modales |
+| JavaScript | Interacción en formularios, modales y uso de graficos |
 | Bootstrap 5 | Componentes UI y layout responsive |
 | Bootstrap Icons | Iconografía del sistema |
 | XAMPP | Entorno de desarrollo local recomendado |
