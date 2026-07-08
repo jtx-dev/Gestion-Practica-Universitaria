@@ -5,7 +5,7 @@ $formato = $_GET['formato'] ?? '';
 $exportar = $_GET['exportar'] ?? '';
 
 if ($exportar !== '1' || !in_array($formato, ['pdf', 'excel'], true)) {
-    header('Location: index.php?pagina=reportes');
+    header('Location: inicio.php?pagina=reportes');
     exit;
 }
 
