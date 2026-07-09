@@ -1,5 +1,7 @@
 <?php
 // Las variables $conexion e $id_carrera vienen definidas desde auth.php
+$mensaje = null;
+$tipo_mensaje = 'success';
 
 /* MANEJAR REVERSIÓN A PENDIENTE */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'revertir') {
@@ -12,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     mysqli_stmt_execute($stmt_rev);
     mysqli_stmt_close($stmt_rev);
     $mensaje = "Oferta devuelta a estado pendiente de revisión.";
+    $tipo_mensaje = "success";
 }
 
 /* MANEJAR RECOMENDACIÓN */
@@ -24,11 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     
     $sql_notif = "INSERT INTO notificacion (id_usuario, titulo, mensaje, tipo_evento) VALUES (?, ?, ?, 'recomendacion')";
     $stmt_notif = mysqli_prepare($conexion, $sql_notif);
+    $stmt_notif = mysqli_prepare($conexion, $sql_notif);
     mysqli_stmt_bind_param($stmt_notif, "iss", $id_est_rec, $titulo_notif, $mensaje_notif);
     mysqli_stmt_execute($stmt_notif);
     mysqli_stmt_close($stmt_notif);
     $mensaje = "Recomendación enviada al alumno.";
+    $tipo_mensaje = "success";
 }
+
 
 /* CONSULTAR OFERTAS APROBADAS */
 $sql_ofertas = "SELECT
@@ -57,12 +63,7 @@ mysqli_stmt_execute($stmt_ofertas);
 $resultado = mysqli_stmt_get_result($stmt_ofertas);
 ?>
 
-<header class="mb-5">
-    <h2 class="fw-bold mb-1">Ofertas Aprobadas</h2>
-    <p class="text-muted">
-        Ofertas activas con sistema de matching de postulantes para tu carrera.
-    </p>
-</header>
+
 
 <div class="card card-custom p-4 bg-white">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -70,8 +71,8 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
     </div>
 
     <?php if (isset($mensaje)) { ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i><?php echo htmlspecialchars($mensaje); ?>
+        <div class="alert alert-<?php echo $tipo_mensaje ?? 'success'; ?> alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-info-circle me-2"></i><?php echo htmlspecialchars($mensaje); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php } ?>
@@ -108,10 +109,21 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
                     <?php echo htmlspecialchars($fila['descripcion']); ?>
                 </p>
 
-                <p class="small mb-2">
-                    <strong>Requisitos:</strong>
-                    <?php echo htmlspecialchars($fila['requisitos']); ?>
-                </p>
+                <div class="mb-2 small">
+                    <strong>Requisitos (Aptitudes):</strong>
+                    <div class="d-flex flex-wrap gap-1 mt-1">
+                        <?php
+                            $res_comps = mysqli_query($conexion, "SELECT c.nombre FROM oferta_competencias oc INNER JOIN competencias c ON oc.id_competencia = c.id WHERE oc.id_oferta = " . $fila['id_oferta']);
+                            if (mysqli_num_rows($res_comps) > 0) {
+                                while ($comp = mysqli_fetch_assoc($res_comps)) {
+                                    echo '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">' . htmlspecialchars($comp['nombre']) . '</span>';
+                                }
+                            } else {
+                                echo '<span class="text-muted small">No se especificaron aptitudes.</span>';
+                            }
+                        ?>
+                    </div>
+                </div>
 
                 <div class="small text-muted">
                     <strong>Empresa:</strong>
@@ -131,14 +143,14 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
 
                 <hr>
 
-                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-trophy me-2"></i>Top 2 Postulantes con Mayor Afinidad</h6>
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-people me-2"></i>Postulantes a esta Práctica (Ordenados por Afinidad)</h6>
                 <?php
                 $id_oferta = (int)$fila['id_oferta'];
                 $id_carrera_oferta = (int)$fila['id_carrera'];
                 $titulo_oferta = htmlspecialchars($fila['titulo']);
 
                 // 1. OBTENER POSTULANTES
-                $sql_postulantes = "SELECT e.id_usuario, e.nombre, e.apellido, e.habilidades, p.cv_estudiante
+                $sql_postulantes = "SELECT e.id_usuario, e.nombre, e.apellido, e.habilidades, p.cv_estudiante, p.token_confirmacion, p.estado_postulacion
                                     FROM postulacion p
                                     INNER JOIN estudiante e ON p.id_estudiante = e.id_usuario
                                     WHERE p.id_oferta = ?";
@@ -156,10 +168,9 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
                 mysqli_stmt_close($stmt_post);
                 
                 usort($lista_postulantes, function($a, $b) { return $b['porcentaje_afinidad'] <=> $a['porcentaje_afinidad']; });
-                $top_postulantes = array_slice($lista_postulantes, 0, 2);
 
-                if (!empty($top_postulantes)) {
-                    foreach ($top_postulantes as $al) {
+                if (!empty($lista_postulantes)) {
+                    foreach ($lista_postulantes as $al) {
                         $afinidad = $al['porcentaje_afinidad'];
                         $badge_color = $afinidad >= 70 ? 'bg-success' : 'bg-warning text-dark';
                         ?>
@@ -168,10 +179,18 @@ $resultado = mysqli_stmt_get_result($stmt_ofertas);
                                 <span class="fw-bold small"><?php echo htmlspecialchars($al['nombre'] . " " . $al['apellido']); ?></span>
                                 <div class="x-small text-muted" style="font-size: 0.75rem;">Habilidades: <?php echo htmlspecialchars($al['habilidades'] ?: 'N/A'); ?></div>
                             </div>
-                            <div class="text-end">
-                                <span class="badge <?php echo $badge_color; ?>"><?php echo $afinidad; ?>%</span>
+                            <div class="text-end" style="min-width: 150px;">
+                                <span class="badge <?php echo $badge_color; ?> mb-1"><?php echo $afinidad; ?>% afinidad</span>
                                 <?php if ($al['cv_estudiante']) { ?>
-                                    <a href="../<?php echo htmlspecialchars($al['cv_estudiante']); ?>" target="_blank" class="btn btn-outline-primary btn-sm d-block mt-1" style="font-size: 0.7rem; padding: 0.1rem 0.3rem;"><i class="bi bi-file-pdf"></i> CV</a>
+                                    <a href="../archivos/cv/<?php echo htmlspecialchars($al['cv_estudiante']); ?>" target="_blank" class="btn btn-outline-primary btn-sm d-block mb-1" style="font-size: 0.65rem; padding: 0.1rem 0.3rem;"><i class="bi bi-file-pdf"></i> Ver CV</a>
+                                <?php } ?>
+                                <?php if ($al['token_confirmacion'] && $al['estado_postulacion'] === 'espera') { ?>
+                                    <a href="../empresa_confirmar.php?token=<?php echo $al['token_confirmacion']; ?>" target="_blank" class="btn btn-success btn-sm d-block mb-1" style="font-size: 0.65rem; padding: 0.1rem 0.3rem;" title="Simular confirmación de empresa"><i class="bi bi-link-45deg"></i> Link Empresa</a>
+                                <?php } elseif ($al['estado_postulacion'] !== 'espera') { ?>
+                                    <?php
+                                        $badge_state_color = $al['estado_postulacion'] === 'aceptada' ? 'bg-success' : 'bg-danger';
+                                    ?>
+                                    <span class="badge <?= $badge_state_color ?> d-block mt-1 text-capitalize" style="font-size: 0.65rem; padding: 0.15rem 0.3rem;">Postulación <?= htmlspecialchars($al['estado_postulacion']) ?></span>
                                 <?php } ?>
                             </div>
                         </div>

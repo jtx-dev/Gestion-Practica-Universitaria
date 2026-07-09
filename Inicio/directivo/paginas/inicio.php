@@ -47,7 +47,7 @@ mysqli_close($conexion);
 ?>
 
 <!-- Tarjetas de resumen -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 align-items-stretch">
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon" style="background:#dbeafe;">

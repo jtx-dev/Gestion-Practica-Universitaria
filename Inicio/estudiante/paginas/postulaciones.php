@@ -3,18 +3,19 @@
 
 // Para cancelar postulación y actualizar en la tabla de ofertas de práctica
 if (isset($_GET['cancelar'])) {
-    $id_postulacion = (int)$_GET['cancelar'];
+    $id_postulacion = (int) $_GET['cancelar'];
 
     $sql = "
-    SELECT id_oferta
+    SELECT id_oferta, estado_postulacion
     FROM postulacion
     WHERE id_postulacion = $id_postulacion
+    AND id_estudiante = $id_estudiante
     ";
 
     $resultado = mysqli_query($conexion, $sql);
     $postulacion = $resultado ? mysqli_fetch_assoc($resultado) : null;
 
-    if ($postulacion) {
+    if ($postulacion && $postulacion['estado_postulacion'] == 'espera') {
         mysqli_query(
             $conexion,
             "DELETE FROM postulacion
@@ -26,7 +27,7 @@ if (isset($_GET['cancelar'])) {
             "UPDATE oferta_practica
             SET cupos = cupos + 1,
                 estado_oferta = 'activa'
-            WHERE id_oferta = " . (int)$postulacion['id_oferta']
+            WHERE id_oferta = " . (int) $postulacion['id_oferta']
         );
     }
 
@@ -99,14 +100,27 @@ $total_postulaciones = count($postulaciones_lista);
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="inicio.php?pagina=detalle_oferta&id=<?php echo $fila['id_oferta']; ?>" class="btn btn-sm btn-outline-primary">Ver Detalle</a>
-                                            <a href="inicio.php?pagina=postulaciones&cancelar=<?php echo $fila['id_postulacion']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Deseas cancelar esta postulación?')">Cancelar</a>
+                                        <td>
+                                            <a href="inicio.php?pagina=detalle_oferta&id=<?php echo $fila['id_oferta']; ?>"
+                                                class="btn btn-sm btn-outline-primary">
+                                                Ver Detalle
+                                            </a>
+
+                                            <?php if ($fila['estado_postulacion'] == 'espera'): ?>
+                                                <a href="inicio.php?pagina=postulaciones&cancelar=<?php echo $fila['id_postulacion']; ?>"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('¿Deseas cancelar esta postulación?')">
+                                                    Cancelar
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Aún no has realizado ninguna postulación.</td>
+                                    <td colspan="5" class="text-center text-muted py-4">Aún no has realizado ninguna
+                                        postulación.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

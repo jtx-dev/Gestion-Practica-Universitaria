@@ -34,15 +34,40 @@ $sql_ofertas_activas = "SELECT e.nombre_empresa, o.titulo, o.cupos, o.id_oferta
                         WHERE o.id_carrera = $id_carrera AND o.estado_oferta = 'activa' 
                         ORDER BY o.fecha_publicacion DESC LIMIT 4";
 $res_ofertas_activas = mysqli_query($conexion, $sql_ofertas_activas);
+// OBTENER TOTAL DE BITACORAS ATRASADAS
+$sql_atrasados = "
+    SELECT COUNT(*) as total
+    FROM practica p
+    INNER JOIN estudiante e ON p.id_estudiante = e.id_usuario
+    WHERE e.id_carrera = $id_carrera
+      AND p.estado_practica = 'en_curso'
+      AND (
+        COALESCE(
+          (SELECT MAX(fecha_registro) FROM bitacora b WHERE b.id_practica = p.id_practica),
+          p.fecha_inicio
+        ) < DATE_SUB(CURDATE(), INTERVAL 15 DAY)
+      )
+";
+$res_atrasados = mysqli_query($conexion, $sql_atrasados);
+$total_atrasados = mysqli_fetch_assoc($res_atrasados)['total'] ?? 0;
 ?>
 
-<header class="mb-5 d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="mb-1 fw-bold">Resumen de Gestión</h2>
-        <p class="text-muted">Control estadístico de tu carrera en tiempo real.</p>
+
+
+<?php if ($total_atrasados > 0): ?>
+    <div class="alert alert-danger border-0 border-start border-danger border-4 shadow-sm mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+                <div>
+                    <strong>¡Alumnos con Bitácoras Atrasadas!</strong> Tienes <strong><?= $total_atrasados ?></strong>
+                    estudiante(s) con bitácoras de práctica quincenales atrasadas en tu carrera.
+                </div>
+            </div>
+            <a href="inicio.php?pagina=alumnos" class="btn btn-danger btn-sm fw-bold">Ver Alumnos</a>
+        </div>
     </div>
-    <a href="inicio.php?pagina=ofertas" class="btn btn-primary shadow-sm"><i class="bi bi-search me-2"></i>Revisar Ofertas Pendientes</a>
-</header>
+<?php endif; ?>
 
 <!-- Métricas Rápidas -->
 <div class="row g-4 mb-5">
@@ -77,9 +102,10 @@ $res_ofertas_activas = mysqli_query($conexion, $sql_ofertas_activas);
     <div class="col-md-7">
         <div class="card card-custom p-4 bg-white h-100 shadow-sm border-0">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Últimas Postulaciones Recibidas</h5>
+                <h5 class="fw-bold mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Últimas Postulaciones
+                    Recibidas</h5>
             </div>
-            
+
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead class="table-light">
@@ -92,19 +118,24 @@ $res_ofertas_activas = mysqli_query($conexion, $sql_ofertas_activas);
                     </thead>
                     <tbody>
                         <?php if (mysqli_num_rows($res_postulaciones) > 0): ?>
-                            <?php while ($post = mysqli_fetch_assoc($res_postulaciones)): 
+                            <?php while ($post = mysqli_fetch_assoc($res_postulaciones)):
                                 $estado = strtolower($post['estado_postulacion']);
-                                $badge = match($estado) {
+                                $badge = match ($estado) {
                                     'aceptada' => 'bg-success',
                                     'rechazada' => 'bg-danger',
                                     default => 'bg-warning text-dark'
                                 };
-                            ?>
+                                ?>
                                 <tr>
-                                    <td class="fw-bold text-dark"><?= htmlspecialchars($post['nombre'] . ' ' . $post['apellido']) ?></td>
-                                    <td class="text-muted small text-truncate" style="max-width: 200px;"><?= htmlspecialchars($post['oferta']) ?></td>
-                                    <td class="text-muted small"><?= date('d/m/Y', strtotime($post['fecha_postulacion'])) ?></td>
-                                    <td class="text-end"><span class="badge <?= $badge ?> rounded-pill"><?= ucfirst($post['estado_postulacion']) ?></span></td>
+                                    <td class="fw-bold text-dark">
+                                        <?= htmlspecialchars($post['nombre'] . ' ' . $post['apellido']) ?></td>
+                                    <td class="text-muted small text-truncate" style="max-width: 200px;">
+                                        <?= htmlspecialchars($post['oferta']) ?></td>
+                                    <td class="text-muted small"><?= date('d/m/Y', strtotime($post['fecha_postulacion'])) ?>
+                                    </td>
+                                    <td class="text-end"><span
+                                            class="badge <?= $badge ?> rounded-pill"><?= ucfirst($post['estado_postulacion']) ?></span>
+                                    </td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
@@ -125,7 +156,7 @@ $res_ofertas_activas = mysqli_query($conexion, $sql_ofertas_activas);
                 <h5 class="fw-bold mb-0"><i class="bi bi-briefcase text-success me-2"></i>Ofertas Activas Recientes</h5>
                 <a href="inicio.php?pagina=ofertas_aprobadas" class="small text-decoration-none">Ver todas</a>
             </div>
-            
+
             <div class="list-group list-group-flush">
                 <?php if (mysqli_num_rows($res_ofertas_activas) > 0): ?>
                     <?php while ($oferta = mysqli_fetch_assoc($res_ofertas_activas)): ?>
@@ -133,13 +164,17 @@ $res_ofertas_activas = mysqli_query($conexion, $sql_ofertas_activas);
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h6 class="fw-bold mb-1 text-dark"><?= htmlspecialchars($oferta['titulo']) ?></h6>
-                                    <div class="small text-muted mb-2"><i class="bi bi-building me-1"></i><?= htmlspecialchars($oferta['nombre_empresa']) ?></div>
+                                    <div class="small text-muted mb-2"><i
+                                            class="bi bi-building me-1"></i><?= htmlspecialchars($oferta['nombre_empresa']) ?>
+                                    </div>
                                 </div>
-                                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 border border-success border-opacity-25">
+                                <span
+                                    class="badge bg-success-subtle text-success rounded-pill px-3 py-2 border border-success border-opacity-25">
                                     <?= $oferta['cupos'] ?> Cupo(s)
                                 </span>
                             </div>
-                            <a href="inicio.php?pagina=ofertas_aprobadas" class="btn btn-outline-secondary btn-sm" style="font-size: 0.75rem;">Ver postulantes</a>
+                            <a href="inicio.php?pagina=ofertas_aprobadas" class="btn btn-outline-secondary btn-sm"
+                                style="font-size: 0.75rem;">Ver postulantes</a>
                         </div>
                     <?php endwhile; ?>
                 <?php else: ?>
