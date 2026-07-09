@@ -61,10 +61,7 @@ $sql_estudiantes = "
 $resultado = mysqli_query($conexion, $sql_estudiantes);
 ?>
 
-<header class="mb-4">
-    <h2 class="mb-1 fw-bold">Validación de Documentos</h2>
-    <p class="text-muted">Revisa y aprueba la documentación obligatoria de tus estudiantes para autorizar sus prácticas.</p>
-</header>
+
 
 <?php if ($mensaje !== ''): ?>
     <div class="alert alert-<?= $tipo_mensaje ?> alert-dismissible fade show border-0 shadow-sm p-3 mb-4 rounded-3" role="alert">

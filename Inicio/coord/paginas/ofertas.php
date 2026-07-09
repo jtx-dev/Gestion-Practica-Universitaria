@@ -63,13 +63,7 @@ mysqli_stmt_execute($stmt_ofertas);
 $resultado = mysqli_stmt_get_result($stmt_ofertas);
 ?>
 
-<header class="mb-5 d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="fw-bold mb-1">Gestión de Empresas / Ofertas</h2>
-        <p class="text-muted">Revisión de ofertas de práctica enviadas por empresas.</p>
-    </div>
-    <span class="badge bg-warning text-dark fs-6">Ofertas pendientes</span>
-</header>
+
 
 <div class="card card-custom p-4 bg-white">
     <div class="d-flex justify-content-between align-items-center mb-4">

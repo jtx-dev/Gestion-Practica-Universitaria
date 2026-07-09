@@ -38,10 +38,6 @@ mysqli_stmt_execute($stmt_ofertas);
 $resultado = mysqli_stmt_get_result($stmt_ofertas);
 ?>
 
-<header class="mb-5">
-    <h2 class="fw-bold mb-1">Ofertas Rechazadas</h2>
-    <p class="text-muted">Historial de ofertas rechazadas por el coordinador.</p>
-</header>
 
 <div class="card card-custom p-4 bg-white">
     <div class="d-flex justify-content-between align-items-center mb-4">

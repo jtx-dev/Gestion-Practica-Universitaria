@@ -137,12 +137,12 @@ if ($prac) {
 <div class="row g-4 mb-5">
     <div class="col-md-12">
         <div class="card card-custom bg-white p-4">
-            <h5 class="fw-bold mb-4">Estado de mi Proceso</h5>
-            <div class="row g-4">
+            <h5 class="fw-semibold mb-4">Estado de mi Proceso</h5>
+            <div class="row g-4 fw-semibold">
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="small fw-bold text-secondary">Carga de Documentos</label>
-                        <span class="badge rounded-pill <?php echo $docClase; ?> small"><?php echo $docBadgeText; ?></span>
+                        <span class="badge rounded-pill <?php echo $docClase; ?> small "><?php echo $docBadgeText; ?></span>
                     </div>
                     <div class="progress" style="height: 8px;">
                         <div class="progress-bar <?php echo $docClase; ?>" style="width: <?php echo $docPorcentaje; ?>%"></div>
@@ -197,7 +197,7 @@ if ($prac) {
     <div class="col-12">
         <div class="card card-custom bg-white">
             <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold mb-0">Ofertas Para Práctica</h5>
+                <h5 class="fw-semibold mb-0">Ofertas Para Práctica</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

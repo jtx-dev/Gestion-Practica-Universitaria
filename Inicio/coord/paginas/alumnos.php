@@ -29,10 +29,7 @@ while ($o = mysqli_fetch_assoc($res_ofertas)) {
 }
 ?>
 
-<header class="mb-5">
-    <h2 class="mb-1">Listado de Alumnos</h2>
-    <p class="text-muted">Gestión y seguimiento de estudiantes de la carrera.</p>
-</header>
+
 
 <div class="card card-custom p-4 bg-white">
     <div class="table-responsive">

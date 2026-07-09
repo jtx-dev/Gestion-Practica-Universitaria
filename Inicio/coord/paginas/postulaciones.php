@@ -19,10 +19,7 @@ mysqli_stmt_execute($stmt);
 $resultado = mysqli_stmt_get_result($stmt);
 ?>
 
-<header class="mb-4">
-    <h2 class="fw-bold mb-1">Bandeja de Postulaciones</h2>
-    <p class="text-muted">Visualiza de forma manual todas las postulaciones activas de los estudiantes de tu carrera.</p>
-</header>
+
 
 <!-- Filtros Reactivos -->
 <div class="row g-3 mb-4">
