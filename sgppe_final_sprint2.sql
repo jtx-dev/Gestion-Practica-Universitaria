@@ -62,7 +62,7 @@ CREATE TABLE `asignacion` (
   CONSTRAINT `asignacion_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `asignacion_ibfk_2` FOREIGN KEY (`id_coordinador`) REFERENCES `coordinador` (`id_usuario`) ON UPDATE CASCADE,
   CONSTRAINT `asignacion_ibfk_3` FOREIGN KEY (`id_directivo`) REFERENCES `directivo` (`id_usuario`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -150,7 +150,7 @@ CREATE TABLE `bitacora` (
   PRIMARY KEY (`id_bitacora`),
   KEY `id_practica` (`id_practica`),
   CONSTRAINT `bitacora_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -159,7 +159,6 @@ CREATE TABLE `bitacora` (
 
 LOCK TABLES `bitacora` WRITE;
 /*!40000 ALTER TABLE `bitacora` DISABLE KEYS */;
-INSERT INTO `bitacora` VALUES (6,1,'2026-01-02','actividades_test','logros_test',2);
 /*!40000 ALTER TABLE `bitacora` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -362,6 +361,15 @@ CREATE TABLE `estudiante` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `estudiante`
+--
+
+LOCK TABLES `estudiante` WRITE;
+/*!40000 ALTER TABLE `estudiante` DISABLE KEYS */;
+INSERT INTO `estudiante` VALUES (12,1,'Sebastian','Vargas',8,'PHP, Javascript',30,'cv.pdf','cedula.pdf','regular.pdf',1,NULL),(19,1,'Diego','Rojas',9,'Python, Django, PostgreSQL, Git',35,'cv_19.pdf','cedula_19.pdf','alumno_19.pdf',1,NULL),(20,1,'Camila','Fuentes',8,'React, Node.js, CSS, HTML',32,'cv_20.pdf','cedula_20.pdf','alumno_20.pdf',1,NULL),(21,1,'Nicolás','Soto',10,'Java, Spring Boot, MySQL',40,'cv_21.pdf','cedula_21.pdf','alumno_21.pdf',1,NULL),(22,2,'Javiera','Martínez',7,'Excel, Finanzas, Marketing',28,'cv_22.pdf','cedula_22.pdf','alumno_22.pdf',1,NULL),(23,2,'Matías','Valenzuela',9,'Administración, Contabilidad',34,'cv_23.pdf','cedula_23.pdf','alumno_23.pdf',1,NULL),(24,3,'Sofía','Benítez',8,'Psicología laboral, Selección de personal',31,'cv_24.pdf','cedula_24.pdf','alumno_24.pdf',1,NULL);
+/*!40000 ALTER TABLE `estudiante` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `estudiante_competencias`
@@ -400,7 +408,7 @@ DROP TABLE IF EXISTS `evaluacion`;
 CREATE TABLE `evaluacion` (
   `id_evaluacion` int(11) NOT NULL AUTO_INCREMENT,
   `id_practica` int(11) NOT NULL,
-  `id_bitacora` int(11) NOT NULL,
+  `id_bitacora` int(11) DEFAULT NULL,
   `nota_final` decimal(4,1) NOT NULL,
   `comentarios` text DEFAULT NULL,
   `fecha_evaluacion` date NOT NULL,
@@ -408,8 +416,8 @@ CREATE TABLE `evaluacion` (
   KEY `id_practica` (`id_practica`),
   KEY `id_bitacora` (`id_bitacora`),
   CONSTRAINT `evaluacion_ibfk_1` FOREIGN KEY (`id_practica`) REFERENCES `practica` (`id_practica`),
-  CONSTRAINT `evaluacion_ibfk_2` FOREIGN KEY (`id_bitacora`) REFERENCES `bitacora` (`id_bitacora`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  CONSTRAINT `evaluacion_ibfk_2` FOREIGN KEY (`id_bitacora`) REFERENCES `bitacora` (`id_bitacora`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -525,7 +533,7 @@ CREATE TABLE `notificacion` (
   PRIMARY KEY (`id_notificacion`),
   KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `notificacion_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -534,7 +542,7 @@ CREATE TABLE `notificacion` (
 
 LOCK TABLES `notificacion` WRITE;
 /*!40000 ALTER TABLE `notificacion` DISABLE KEYS */;
-INSERT INTO `notificacion` VALUES (1,12,'¡Práctica Recomendada!','Tu coordinador te recomienda revisar la oferta: \'24234sd\'. Tu perfil hace match con lo que buscan.','2026-07-05 20:45:23',1,'recomendacion');
+INSERT INTO `notificacion` VALUES (1,12,'¡Práctica Recomendada!','Tu coordinador te recomienda revisar la oferta: \'24234sd\'. Tu perfil hace match con lo que buscan.','2026-07-05 20:45:23',1,'recomendacion'),(3,12,'Práctica Evaluada','Tu coordinador ha evaluado tu práctica con nota 6.5.','2026-07-09 19:58:04',1,'evaluacion'),(4,12,'¡Práctica Recomendada!','Tu coordinador te recomienda revisar la oferta: \'24234sd\'. Tu perfil hace match con lo que buscan.','2026-07-09 20:01:45',1,'recomendacion'),(5,12,'¡Postulación Aceptada!','La empresa empresa spa ha aceptado tu postulación para \'24234sd\'. Tu práctica profesional se encuentra ahora EN CURSO.','2026-07-09 20:04:48',0,'confirmacion');
 /*!40000 ALTER TABLE `notificacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -598,7 +606,7 @@ CREATE TABLE `oferta_practica` (
 
 LOCK TABLES `oferta_practica` WRITE;
 /*!40000 ALTER TABLE `oferta_practica` DISABLE KEYS */;
-INSERT INTO `oferta_practica` VALUES (2,1,5,'Desarrollador Web Junior','Apoyo en desarrollo web','PHP, HTML, CSS y MySQL',3,6,'rechazada','2026-06-16 21:40:34',NULL),(3,1,15,'24234sd','asdikjasdunbhjasnubh','Ver etiquetas de competencias',1,3,'activa','2026-06-18 15:50:13',NULL),(4,1,17,'asdasd','asd','Ver etiquetas de competencias',5,3,'activa','2026-07-05 20:44:12',NULL);
+INSERT INTO `oferta_practica` VALUES (2,1,5,'Desarrollador Web Junior','Apoyo en desarrollo web','PHP, HTML, CSS y MySQL',3,6,'rechazada','2026-06-16 21:40:34',NULL),(3,1,15,'24234sd','asdikjasdunbhjasnubh','Ver etiquetas de competencias',0,3,'cerrada','2026-06-18 15:50:13',NULL),(4,1,17,'asdasd','asd','Ver etiquetas de competencias',5,3,'activa','2026-07-05 20:44:12',NULL);
 /*!40000 ALTER TABLE `oferta_practica` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -616,12 +624,14 @@ CREATE TABLE `postulacion` (
   `fecha_postulacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `estado_postulacion` enum('espera','aceptada','rechazada') NOT NULL DEFAULT 'espera',
   `cv_estudiante` varchar(255) NOT NULL,
+  `token_confirmacion` varchar(255) DEFAULT NULL,
+  `fecha_limite_confirmacion` datetime DEFAULT NULL,
   PRIMARY KEY (`id_postulacion`),
   KEY `id_estudiante` (`id_estudiante`),
   KEY `id_oferta` (`id_oferta`),
   CONSTRAINT `postulacion_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiante` (`id_usuario`),
   CONSTRAINT `postulacion_ibfk_2` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -630,7 +640,6 @@ CREATE TABLE `postulacion` (
 
 LOCK TABLES `postulacion` WRITE;
 /*!40000 ALTER TABLE `postulacion` DISABLE KEYS */;
-INSERT INTO `postulacion` VALUES (3,3,2,'2026-06-17 07:10:35','espera','cv.pdf');
 /*!40000 ALTER TABLE `postulacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -661,7 +670,7 @@ CREATE TABLE `practica` (
   CONSTRAINT `practica_ibfk_2` FOREIGN KEY (`id_oferta`) REFERENCES `oferta_practica` (`id_oferta`),
   CONSTRAINT `practica_ibfk_3` FOREIGN KEY (`id_coordinador`) REFERENCES `coordinador` (`id_usuario`),
   CONSTRAINT `practica_ibfk_4` FOREIGN KEY (`id_directivo`) REFERENCES `directivo` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -670,7 +679,6 @@ CREATE TABLE `practica` (
 
 LOCK TABLES `practica` WRITE;
 /*!40000 ALTER TABLE `practica` DISABLE KEYS */;
-INSERT INTO `practica` VALUES (1,3,2,NULL,NULL,'postulado','2026-06-17',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `practica` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -753,7 +761,7 @@ CREATE TABLE `usuario` (
   KEY `id_institucion` (`id_institucion`),
   CONSTRAINT `usuario_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `rol` (`id_rol`),
   CONSTRAINT `usuario_ibfk_2` FOREIGN KEY (`id_institucion`) REFERENCES `institucion` (`id_institucion`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -762,7 +770,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (3,1,5,'16.222.222-1','pgomez@admin.com','$2y$10$ZhHD/FG4phU3bdjdliUqx.UlAV2zwwGY68SEqWyHdzzG6gU2hVety','activa','2026-06-16 01:25:36','2026-06-16 01:24:41'),(5,3,5,'11.111.111-1','empresa@test.cl','123456','inactiva','2026-07-05 20:42:17','2026-06-16 21:30:09'),(8,1,5,'191643690','admin@ucsc.cl','$2y$10$9qYjlfySb9LQaWl0aNTymO96bR.HAdK7w7N5D9pZkOJHBC90ehE.W','activa','2026-06-18 14:46:36','2026-06-18 14:46:36'),(12,4,5,'211428058','svargasn@ing.ucsc.cl','$2y$10$ctsO13cKyHL8PhI3QL/UuuSiPUFZVT5YupU55kBwUgVtS4aHR9ZtS','activa','2026-06-18 14:51:37','2026-06-18 14:51:37'),(13,2,5,'97034168','coord@coord.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-06-18 15:37:12','2026-06-18 15:37:12'),(14,5,5,'55782520','directivo@directivo.cl','$2y$10$2pNVV99bynwzOj2i455mLu1xCdkgooxMxJZw5CTHJXdTKfXJr29am','activa','2026-06-18 15:40:28','2026-06-18 15:40:28'),(15,3,5,'76.115.412.5','aq@aasd.cl','$2y$10$lvwTP5XH2z5QnCflTRrFpeqibhNLOPYyK7x7Zg92fUNDyqHJgV4Fm','activa','2026-06-18 15:50:13','2026-06-18 15:50:13'),(17,3,5,'94439496-6','as@asa.cs','$2y$10$1RPrZmTT.N4z0.H61GAjFeRb2DYyBq8asvr4fa.PZnCTORtJF1Yrm','activa','2026-07-05 20:44:12','2026-07-05 20:44:12'),(18,6,5,'99.999.999-9','superadmin@sgppe.cl','$2y$10$PIi0ft/nKYjvAY4Dr6zmnuZ3tepTN51LVZnsVzWo80oKV1NdKaJWG','activa','2026-07-05 21:11:02','2026-07-05 21:11:02');
+INSERT INTO `usuario` VALUES (3,1,5,'16.222.222-1','pgomez@admin.com','$2y$10$ZhHD/FG4phU3bdjdliUqx.UlAV2zwwGY68SEqWyHdzzG6gU2hVety','activa','2026-06-16 01:25:36','2026-06-16 01:24:41'),(5,3,5,'11.111.111-1','empresa@test.cl','123456','inactiva','2026-07-05 20:42:17','2026-06-16 21:30:09'),(8,1,5,'191643690','admin@ucsc.cl','$2y$10$9qYjlfySb9LQaWl0aNTymO96bR.HAdK7w7N5D9pZkOJHBC90ehE.W','activa','2026-06-18 14:46:36','2026-06-18 14:46:36'),(12,4,5,'211428058','svargasn@ing.ucsc.cl','$2y$10$ctsO13cKyHL8PhI3QL/UuuSiPUFZVT5YupU55kBwUgVtS4aHR9ZtS','activa','2026-06-18 14:51:37','2026-06-18 14:51:37'),(13,2,5,'97034168','coord@coord.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-06-18 15:37:12','2026-06-18 15:37:12'),(14,5,5,'55782520','directivo@directivo.cl','$2y$10$2pNVV99bynwzOj2i455mLu1xCdkgooxMxJZw5CTHJXdTKfXJr29am','activa','2026-06-18 15:40:28','2026-06-18 15:40:28'),(15,3,5,'76.115.412.5','aq@aasd.cl','$2y$10$lvwTP5XH2z5QnCflTRrFpeqibhNLOPYyK7x7Zg92fUNDyqHJgV4Fm','activa','2026-06-18 15:50:13','2026-06-18 15:50:13'),(17,3,5,'94439496-6','as@asa.cs','$2y$10$1RPrZmTT.N4z0.H61GAjFeRb2DYyBq8asvr4fa.PZnCTORtJF1Yrm','activa','2026-07-05 20:44:12','2026-07-05 20:44:12'),(18,6,5,'99.999.999-9','superadmin@sgppe.cl','$2y$10$PIi0ft/nKYjvAY4Dr6zmnuZ3tepTN51LVZnsVzWo80oKV1NdKaJWG','activa','2026-07-05 21:11:02','2026-07-05 21:11:02'),(19,4,5,'20.111.111-1','drojas@ing.ucsc.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-07-09 20:01:19','2026-07-09 20:01:19'),(20,4,5,'21.222.222-2','cfuentes@ing.ucsc.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-07-09 20:01:19','2026-07-09 20:01:19'),(21,4,5,'22.333.333-3','nsoto@ing.ucsc.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-07-09 20:01:19','2026-07-09 20:01:19'),(22,4,5,'23.444.444-4','jmartinez@comercial.ucsc.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-07-09 20:01:19','2026-07-09 20:01:19'),(23,4,5,'24.555.555-5','mvalenzuela@comercial.ucsc.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-07-09 20:01:19','2026-07-09 20:01:19'),(24,4,5,'25.666.666-6','sbenitez@psicologia.ucsc.cl','$2y$10$pJGo07dAuVIvNoDGuayC6ef/fqF9HesinNTuZ9COHxX3iMF3njsVO','activa','2026-07-09 20:01:19','2026-07-09 20:01:19');
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -817,4 +825,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-05 17:30:42
+-- Dump completed on 2026-07-09 16:06:57
