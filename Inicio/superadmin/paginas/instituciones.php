@@ -257,7 +257,7 @@ if ($consulta) {
     </div>
 <?php endif; ?>
 
-<div class="row g-3">
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
     <?php if (count($instituciones) > 0): ?>
         <?php foreach ($instituciones as $institucion): ?>
             <?php
@@ -267,35 +267,39 @@ if ($consulta) {
                 $logoSrc = preg_match('#^https?://#i', $logo) ? $logo : '../../' . ltrim($logo, '/');
             }
             ?>
-            <div class="col-12">
-                <div class="institution-card p-3" style="background: #ffffff; border: 1px solid #e3e6f0; border-radius: 8px; margin-bottom: 1rem;">
-                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
-                        <div class="flex-shrink-0">
-                            <?php if ($logoSrc !== ''): ?>
-                                <img src="<?= htmlspecialchars($logoSrc) ?>" alt="Logo de <?= htmlspecialchars($institucion['nombre']) ?>" class="institution-logo" style="width:48px;height:48px;max-width:48px;max-height:48px;object-fit:contain;display:block;">
-                            <?php else: ?>
-                                <div class="institution-logo-placeholder" style="width:48px;height:48px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;border-radius:50%;color:#6c757d;font-size:24px;">
-                                    <i class="bi bi-building"></i>
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 rounded-3" style="background-color: #f3f4f6;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="flex-shrink-0">
+                                <?php if ($logoSrc !== ''): ?>
+                                    <img src="<?= htmlspecialchars($logoSrc) ?>" alt="Logo de <?= htmlspecialchars($institucion['nombre']) ?>" class="img-fluid rounded-2" style="width: 48px; height: 48px; object-fit: contain;">
+                                <?php else: ?>
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-light text-secondary" style="width: 48px; height: 48px; font-size: 24px;">
+                                        <i class="bi bi-building"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <h5 class="card-title mb-0"><?= htmlspecialchars($institucion['nombre']) ?></h5>
+                                    <span class="badge bg-<?= $institucion['estado_institucion'] === 'activa' ? 'success' : 'secondary' ?>">
+                                        <?= htmlspecialchars($institucion['estado_institucion']) ?>
+                                    </span>
                                 </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <h5 class="mb-0"><?= htmlspecialchars($institucion['nombre']) ?></h5>
-                                <span class="badge bg-<?= $institucion['estado_institucion'] === 'activa' ? 'success' : 'secondary' ?>">
-                                    <?= htmlspecialchars($institucion['estado_institucion']) ?>
-                                </span>
-                            </div>
-                            <div class="text-muted small">ID <?= (int) $institucion['id_institucion'] ?></div>
-                            <div class="small text-muted mt-2 text-break">
-                                <?= $logo !== '' ? htmlspecialchars($logo) : 'Sin logo registrado' ?>
-                            </div>
-                            <div class="small mt-2">
-                                <span class="text-muted">Administrador:</span>
-                                <?= !empty($institucion['correo_administrador']) ? htmlspecialchars($institucion['correo_administrador']) : '<span class="text-muted">Sin asignar</span>' ?>
+                                <p class="card-text text-muted small mb-2">ID <?= (int) $institucion['id_institucion'] ?></p>
+                                <p class="card-text small text-muted mb-2 text-break">
+                                    <?= $logo !== '' ? htmlspecialchars($logo) : 'Sin logo registrado' ?>
+                                </p>
+                                <p class="card-text small mb-0">
+                                    <span class="text-muted">Administrador:</span>
+                                    <?= !empty($institucion['correo_administrador']) ? htmlspecialchars($institucion['correo_administrador']) : '<span class="text-muted">Sin asignar</span>' ?>
+                                </p>
                             </div>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                    </div>
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <div class="d-flex flex-wrap gap-2">
                             <button
                                 class="btn btn-sm btn-outline-primary"
                                 data-bs-toggle="modal"
@@ -313,7 +317,7 @@ if ($consulta) {
                                     <input type="hidden" name="accion" value="cambiar_estado">
                                     <input type="hidden" name="id_institucion" value="<?= (int) $institucion['id_institucion'] ?>">
                                     <input type="hidden" name="estado" value="inactiva">
-                                    <button class="btn btn-sm btn-outline-warning" type="submit">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">
                                         <i class="bi bi-toggle-off me-1"></i>Desactivar
                                     </button>
                                 </form>
@@ -341,7 +345,7 @@ if ($consulta) {
         <?php endforeach; ?>
     <?php else: ?>
         <div class="col-12">
-            <div class="card-custom p-4 text-center text-muted">No hay instituciones registradas.</div>
+            <div class="alert alert-light text-center text-muted mb-0">No hay instituciones registradas.</div>
         </div>
     <?php endif; ?>
 </div>
