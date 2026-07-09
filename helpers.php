@@ -14,7 +14,10 @@
  */
 function calcular_afinidad_tags($conexion, $id_estudiante, $id_oferta) {
     // 1. Obtener IDs de competencias que pide la oferta
+    error_log("calcular_afinidad_tags: id_estudiante=$id_estudiante, id_oferta=$id_oferta");
+    // 1. Obtener IDs de competencias que pide la oferta
     $sql_req = "SELECT id_competencia FROM oferta_competencias WHERE id_oferta = " . (int)$id_oferta;
+    error_log("SQL Requisitos Oferta: $sql_req");
     $res_req = mysqli_query($conexion, $sql_req);
     
     $requisitos = [];
@@ -22,10 +25,14 @@ function calcular_afinidad_tags($conexion, $id_estudiante, $id_oferta) {
         while($f = mysqli_fetch_assoc($res_req)) {
             $requisitos[] = $f['id_competencia'];
         }
+        error_log("Requisitos Oferta encontrados: " . count($requisitos));
+    } else {
+        error_log("Error en SQL Requisitos Oferta: " . mysqli_error($conexion));
     }
 
     // Si la oferta no tiene etiquetas definidas, devolvemos 0 (o podrías usar el fallback de texto)
     if (empty($requisitos)) {
+        error_log("Oferta sin requisitos, retornando 0.");
         return 0;
     }
 
@@ -35,14 +42,20 @@ function calcular_afinidad_tags($conexion, $id_estudiante, $id_oferta) {
                   FROM estudiante_competencias 
                   WHERE id_estudiante = " . (int)$id_estudiante . " 
                   AND id_competencia IN ($ids_busqueda)";
+    error_log("SQL Match Estudiante: $sql_match");
     
     $res_match = mysqli_query($conexion, $sql_match);
     $coincidencias = 0;
     if ($res_match) {
         $data = mysqli_fetch_assoc($res_match);
         $coincidencias = (int)$data['total'];
+        error_log("Coincidencias encontradas: $coincidencias");
+    } else {
+        error_log("Error en SQL Match Estudiante: " . mysqli_error($conexion));
     }
 
     // 3. Porcentaje simple: (coincidencias / total_requisitos) * 100
-    return (int) round(($coincidencias / count($requisitos)) * 100);
+    $afinidad = (int) round(($coincidencias / count($requisitos)) * 100);
+    error_log("Afinidad calculada: $afinidad%");
+    return $afinidad;
 }
