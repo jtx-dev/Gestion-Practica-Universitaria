@@ -362,15 +362,6 @@ CREATE TABLE `estudiante` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `estudiante`
---
-
-LOCK TABLES `estudiante` WRITE;
-/*!40000 ALTER TABLE `estudiante` DISABLE KEYS */;
-INSERT INTO `estudiante` VALUES (3,1,'Jeremy','Mendoza',8,'HTML, CSS, PHP',35),(12,1,'sebastian','vargas',1,'LARAVEL',0);
-/*!40000 ALTER TABLE `estudiante` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `estudiante_competencias`
